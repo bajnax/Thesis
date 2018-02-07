@@ -4,6 +4,9 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -24,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class LeScanActivity extends AppCompatActivity {
 
@@ -94,7 +98,7 @@ public class LeScanActivity extends AppCompatActivity {
         stopLookUp.setVisibility(View.VISIBLE);
         spinner.setVisibility(View.VISIBLE);
         lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
-
+        scanLeDevice(mScanning);
     }
 
     private void stopScanning() {
@@ -103,7 +107,7 @@ public class LeScanActivity extends AppCompatActivity {
         spinner.setVisibility(View.INVISIBLE);
         lookUp.setVisibility(View.VISIBLE);
         lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
-
+        scanLeDevice(mScanning);
     }
 
     private boolean isAccessFineLocationAllowed() {
@@ -155,23 +159,49 @@ public class LeScanActivity extends AppCompatActivity {
     }
 
     private void scanLeDevice(final boolean enable) {
+
+        final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+
         if (enable) {
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
-                    mBluetoothAdapter.stopLeScan(myLeScanCallback);
+                    bluetoothLeScanner.stopScan(myLeScanCallback);
                 }
             }, SCAN_PERIOD);
 
             mScanning = true;
-            mBluetoothAdapter.startLeScan(myLeScanCallback);
+            bluetoothLeScanner.startScan(myLeScanCallback);
         } else {
             mScanning = false;
-            mBluetoothAdapter.stopLeScan(myLeScanCallback);
+            bluetoothLeScanner.stopScan(myLeScanCallback);
         }
     }
+
+
+    private ScanCallback myLeScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            // TODO: read about ScanCallback and replace LeScanCallback with it
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+        }
+
+    };
+
+
+    /* OBSOLETE
 
     // this is how scan results are returned.
     // the callback will be passed to startLeScan() as a parameter
@@ -187,7 +217,7 @@ public class LeScanActivity extends AppCompatActivity {
             });
 
         }
-    };
+    };*/
 
 
     // Adapter for holding devices found through scanning.
@@ -249,7 +279,7 @@ public class LeScanActivity extends AppCompatActivity {
             if (deviceName != null && deviceName.length() > 0)
                 viewHolder.deviceName.setText(deviceName);
             else
-                viewHolder.deviceName.setText(R.string.unknown_device);
+                viewHolder.deviceName.setText(R.string.unknown_device);     // TODO: check this part
             viewHolder.deviceAddress.setText(device.getAddress());
 
             return view;

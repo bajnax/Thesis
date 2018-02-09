@@ -56,9 +56,10 @@ public class LeScanActivity extends AppCompatActivity {
         lookUpText = (TextView) findViewById(R.id.lookUpTextView);
 
         mHandler = new Handler();
+        mLeDeviceListAdapter = new LeDeviceListAdapter();
 
         Drawable progressDrawable = spinner.getIndeterminateDrawable().mutate();
-        progressDrawable.setColorFilter(getColor(R.color.colorMain), PorterDuff.Mode.MULTIPLY);
+        progressDrawable.setColorFilter(getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
         spinner.setProgressDrawable(progressDrawable);
 
         // Initially, the 'Stop' button and the 'spinner' are invisible
@@ -117,11 +118,10 @@ public class LeScanActivity extends AppCompatActivity {
         stopLookUp.setVisibility(View.INVISIBLE);
         spinner.setVisibility(View.INVISIBLE);
         lookUp.setVisibility(View.INVISIBLE);
-        lookUpText.setVisibility(View.INVISIBLE);//setText(getResources().getString(R.string.look_up_text_view_initial));
+        lookUpText.setVisibility(View.INVISIBLE);
 
         devicesList = (ListView) findViewById(R.id.devices_list);
         devicesList.setVisibility(View.VISIBLE);
-        mLeDeviceListAdapter = new LeDeviceListAdapter();
         devicesList.setAdapter(mLeDeviceListAdapter);
     }
 
@@ -186,6 +186,7 @@ public class LeScanActivity extends AppCompatActivity {
                 public void run() {
                     if(mLeDeviceListAdapter.getCount() == 0) {
                         stopScanning();
+                        lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning_failed));
                     }
                     bluetoothLeScanner.stopScan(myLeScanCallback);
                 }
@@ -225,15 +226,15 @@ public class LeScanActivity extends AppCompatActivity {
             super.onBatchScanResults(results);
             if(mLeDeviceListAdapter.getCount() == 0) {
                 stopScanning();
-            } else {
-                    // TODO
             }
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            stopScanning();
+            if(mLeDeviceListAdapter.getCount() == 0) {
+                stopScanning();
+            }
         }
 
     };
@@ -287,6 +288,7 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder = new ViewHolder();
                 viewHolder.deviceName = (TextView) view.findViewById(R.id.deviceNameTxtV);
                 viewHolder.deviceAddress = (TextView) view.findViewById(R.id.deviceAddressTxtV);
+                viewHolder.connect_btn = (Button) view.findViewById(R.id.connect_button);
                 view.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) view.getTag();
@@ -300,6 +302,13 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder.deviceName.setText(R.string.unknown_device);
             viewHolder.deviceAddress.setText(device.getAddress());
 
+            viewHolder.connect_btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //TODO connecting to the selected device
+                }
+            });
+
             return view;
         }
     }
@@ -308,6 +317,7 @@ public class LeScanActivity extends AppCompatActivity {
     static class ViewHolder {
         TextView deviceName;
         TextView deviceAddress;
+        Button connect_btn;
     }
 
 }

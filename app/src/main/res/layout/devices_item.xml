@@ -1,20 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/deviceNameTxtV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/device_name" />
+        android:layout_toStartOf="@+id/connect_button"
+        android:text="@string/device_name"
+        android:textColor="@color/colorPrimary"
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/deviceAddressTxtV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/device_address" />
-</LinearLayout>
+        android:layout_marginBottom="5dp"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/deviceNameTxtV"
+        android:layout_toStartOf="@+id/connect_button"
+        android:text="@string/device_address"
+        android:textColor="@color/colorPrimary"
+        android:textStyle="bold"/>
+
+    <Button
+        android:id="@+id/connect_button"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:background="@color/colorPrimary"
+        android:elevation="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/deviceAddressTxtV"
+        android:layout_gravity="right"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/connect_btn_txt"/>
+
+</RelativeLayout>

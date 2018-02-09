@@ -1,10 +1,15 @@
 <resources>
     <string name="app_name">Thesis</string>
     <string name="look_up_text_view_initial">Press \'Scan\' to search for available device</string>
+    <string name="look_up_text_view_scanning_failed">No BLE devices found. Press \'Scan\' to search again</string>
     <string name="look_up_text_view_scanning">Searching for available devices</string>
-    <string name="look_up_btn">Scan</string>
-    <string name="stop_look_up_btn">Stop</string>
+
+    <string name="look_up_btn_txt">Scan</string>
+    <string name="stop_look_up_btn_txt">Stop</string>
+    <string name="connect_btn_txt">Connect</string>
+
     <string name="device_name">Device Name</string>
     <string name="device_address">Device Address</string>
     <string name="unknown_device">Unknown Device</string>
+
 </resources>

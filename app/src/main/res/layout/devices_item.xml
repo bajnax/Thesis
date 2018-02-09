@@ -8,11 +8,13 @@
         android:id="@+id/deviceNameTxtV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/device_name" />
 
     <TextView
         android:id="@+id/deviceAddressTxtV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/device_address" />
 </LinearLayout>

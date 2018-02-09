@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,6 +42,7 @@ public class LeScanActivity extends AppCompatActivity {
     private boolean mScanning;
     private Handler mHandler;
     private LeDeviceListAdapter mLeDeviceListAdapter;
+    private ListView devicesList;
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
 
@@ -52,6 +54,8 @@ public class LeScanActivity extends AppCompatActivity {
         stopLookUp = (Button) findViewById(R.id.stopLookUpBtn);
         spinner = (ProgressBar) findViewById(R.id.spinner);
         lookUpText = (TextView) findViewById(R.id.lookUpTextView);
+
+        mHandler = new Handler();
 
         Drawable progressDrawable = spinner.getIndeterminateDrawable().mutate();
         progressDrawable.setColorFilter(getColor(R.color.colorMain), PorterDuff.Mode.MULTIPLY);
@@ -66,7 +70,7 @@ public class LeScanActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 if (isAccessFineLocationAllowed())
-                    startScanning();
+                    scanLeDevice(true);
                 else
                     requestAccessFineLocation();
             }
@@ -75,7 +79,7 @@ public class LeScanActivity extends AppCompatActivity {
         stopLookUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopScanning();
+                scanLeDevice(false);
             }
         });
 
@@ -98,7 +102,6 @@ public class LeScanActivity extends AppCompatActivity {
         stopLookUp.setVisibility(View.VISIBLE);
         spinner.setVisibility(View.VISIBLE);
         lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
-        scanLeDevice(mScanning);
     }
 
     private void stopScanning() {
@@ -107,8 +110,21 @@ public class LeScanActivity extends AppCompatActivity {
         spinner.setVisibility(View.INVISIBLE);
         lookUp.setVisibility(View.VISIBLE);
         lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
-        scanLeDevice(mScanning);
     }
+
+    private void scanFinished() {
+        mScanning = false;
+        stopLookUp.setVisibility(View.INVISIBLE);
+        spinner.setVisibility(View.INVISIBLE);
+        lookUp.setVisibility(View.INVISIBLE);
+        lookUpText.setVisibility(View.INVISIBLE);//setText(getResources().getString(R.string.look_up_text_view_initial));
+
+        devicesList = (ListView) findViewById(R.id.devices_list);
+        devicesList.setVisibility(View.VISIBLE);
+        mLeDeviceListAdapter = new LeDeviceListAdapter();
+        devicesList.setAdapter(mLeDeviceListAdapter);
+    }
+
 
     private boolean isAccessFineLocationAllowed() {
         if (ContextCompat.checkSelfPermission(LeScanActivity.this,
@@ -163,62 +179,64 @@ public class LeScanActivity extends AppCompatActivity {
         final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
         if (enable) {
+
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    mScanning = false;
+                    if(mLeDeviceListAdapter.getCount() == 0) {
+                        stopScanning();
+                    }
                     bluetoothLeScanner.stopScan(myLeScanCallback);
                 }
             }, SCAN_PERIOD);
 
-            mScanning = true;
+
+            startScanning();
             bluetoothLeScanner.startScan(myLeScanCallback);
+
         } else {
-            mScanning = false;
+            stopScanning();
             bluetoothLeScanner.stopScan(myLeScanCallback);
         }
     }
 
 
     private ScanCallback myLeScanCallback = new ScanCallback() {
+
+        // TODO: read about ScanCallback
         @Override
-        public void onScanResult(int callbackType, ScanResult result) {
+        public void onScanResult(int callbackType, final ScanResult result) {
+
             super.onScanResult(callbackType, result);
-            // TODO: read about ScanCallback and replace LeScanCallback with it
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    scanFinished();
+                    mLeDeviceListAdapter.addDevice(result.getDevice());
+                    mLeDeviceListAdapter.notifyDataSetChanged();
+                }
+            });
         }
 
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
+            if(mLeDeviceListAdapter.getCount() == 0) {
+                stopScanning();
+            } else {
+                    // TODO
+            }
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
+            stopScanning();
         }
 
     };
-
-
-    /* OBSOLETE
-
-    // this is how scan results are returned.
-    // the callback will be passed to startLeScan() as a parameter
-    BluetoothAdapter.LeScanCallback myLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mLeDeviceListAdapter.addDevice(device);
-                    mLeDeviceListAdapter.notifyDataSetChanged();
-                }
-            });
-
-        }
-    };*/
-
 
     // Adapter for holding devices found through scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
@@ -251,17 +269,17 @@ public class LeScanActivity extends AppCompatActivity {
         }
 
         @Override
-        public Object getItem(int i) {
-            return mLeDevices.get(i);
+        public Object getItem(int position) {
+            return mLeDevices.get(position);
         }
 
         @Override
-        public long getItemId(int i) {
-            return i;
+        public long getItemId(int position) {
+            return position;
         }
 
         @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public View getView(int position, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
             // General ListView optimization code.
             if (view == null) {
@@ -274,12 +292,12 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            BluetoothDevice device = mLeDevices.get(i);
+            BluetoothDevice device = mLeDevices.get(position);
             final String deviceName = device.getName();
             if (deviceName != null && deviceName.length() > 0)
                 viewHolder.deviceName.setText(deviceName);
             else
-                viewHolder.deviceName.setText(R.string.unknown_device);     // TODO: check this part
+                viewHolder.deviceName.setText(R.string.unknown_device);
             viewHolder.deviceAddress.setText(device.getAddress());
 
             return view;

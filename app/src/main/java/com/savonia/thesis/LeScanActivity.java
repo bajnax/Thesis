@@ -54,6 +54,7 @@ public class LeScanActivity extends AppCompatActivity {
         stopLookUp = (Button) findViewById(R.id.stopLookUpBtn);
         spinner = (ProgressBar) findViewById(R.id.spinner);
         lookUpText = (TextView) findViewById(R.id.lookUpTextView);
+        devicesList = (ListView) findViewById(R.id.devices_list);
 
         mHandler = new Handler();
         mLeDeviceListAdapter = new LeDeviceListAdapter();
@@ -120,9 +121,10 @@ public class LeScanActivity extends AppCompatActivity {
         lookUp.setVisibility(View.INVISIBLE);
         lookUpText.setVisibility(View.INVISIBLE);
 
-        devicesList = (ListView) findViewById(R.id.devices_list);
+        // replacing old layout with listView
         devicesList.setVisibility(View.VISIBLE);
         devicesList.setAdapter(mLeDeviceListAdapter);
+        // TODO add refresh button to the toolbar and invoke it from here
     }
 
 

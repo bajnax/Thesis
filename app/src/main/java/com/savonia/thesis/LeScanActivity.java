@@ -17,7 +17,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -39,8 +42,8 @@ public class LeScanActivity extends AppCompatActivity {
     private Button stopLookUp;
     private ProgressBar spinner;
     private TextView lookUpText;
-    private boolean mScanning;
     private Handler mHandler;
+    private Toolbar toolBar;
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private ListView devicesList;
     // Stops scanning after 10 seconds.
@@ -55,16 +58,19 @@ public class LeScanActivity extends AppCompatActivity {
         spinner = (ProgressBar) findViewById(R.id.spinner);
         lookUpText = (TextView) findViewById(R.id.lookUpTextView);
         devicesList = (ListView) findViewById(R.id.devices_list);
+        toolBar = (Toolbar) findViewById(R.id.tool_bar);
+        setSupportActionBar(toolBar);
 
         mHandler = new Handler();
         mLeDeviceListAdapter = new LeDeviceListAdapter();
+        devicesList.setAdapter(mLeDeviceListAdapter);
 
         Drawable progressDrawable = spinner.getIndeterminateDrawable().mutate();
         progressDrawable.setColorFilter(getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
         spinner.setProgressDrawable(progressDrawable);
 
-        // Initially, the 'Stop' button and the 'spinner' are invisible
-        stopLookUp.setVisibility(View.INVISIBLE);
+        // Initially, the 'Stop' button and the 'spinner' are gone
+        stopLookUp.setVisibility(View.GONE);
         spinner.setVisibility(View.GONE);
 
         lookUp.setOnClickListener(new View.OnClickListener() {
@@ -98,33 +104,75 @@ public class LeScanActivity extends AppCompatActivity {
 
     }
 
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_refresh) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        scanLeDevice(false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+
+        mLeDeviceListAdapter.clear();
+        mLeDeviceListAdapter.notifyDataSetChanged();
+        stopScanning();
+    }
+
     private void startScanning() {
-        mScanning = true;
-        lookUp.setVisibility(View.INVISIBLE);
+        lookUp.setVisibility(View.GONE);
+
         stopLookUp.setVisibility(View.VISIBLE);
         spinner.setVisibility(View.VISIBLE);
+        lookUpText.setVisibility(View.VISIBLE);
         lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
     }
 
     private void stopScanning() {
-        mScanning = false;
-        stopLookUp.setVisibility(View.INVISIBLE);
-        spinner.setVisibility(View.INVISIBLE);
+        devicesList.setVisibility(View.GONE);
+        stopLookUp.setVisibility(View.GONE);
+        spinner.setVisibility(View.GONE);
+
         lookUp.setVisibility(View.VISIBLE);
+        lookUpText.setVisibility(View.VISIBLE);
         lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
     }
 
     private void scanFinished() {
-        mScanning = false;
-        stopLookUp.setVisibility(View.INVISIBLE);
-        spinner.setVisibility(View.INVISIBLE);
-        lookUp.setVisibility(View.INVISIBLE);
-        lookUpText.setVisibility(View.INVISIBLE);
+        stopLookUp.setVisibility(View.GONE);
+        spinner.setVisibility(View.GONE);
+        lookUp.setVisibility(View.GONE);
+        lookUpText.setVisibility(View.GONE);
 
         // replacing old layout with listView
         devicesList.setVisibility(View.VISIBLE);
-        devicesList.setAdapter(mLeDeviceListAdapter);
-        // TODO add refresh button to the toolbar and invoke it from here
+
+        // TODO add refresh button to the toolbar and set it to 'VISIBLE' here
     }
 
 
@@ -137,6 +185,7 @@ public class LeScanActivity extends AppCompatActivity {
             return true;
 
     }
+
     private void requestAccessFineLocation() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(LeScanActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -290,6 +339,8 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder = new ViewHolder();
                 viewHolder.deviceName = (TextView) view.findViewById(R.id.deviceNameTxtV);
                 viewHolder.deviceAddress = (TextView) view.findViewById(R.id.deviceAddressTxtV);
+
+                // TODO insert an icon into the 'connect' button intead of the text
                 viewHolder.connect_btn = (Button) view.findViewById(R.id.connect_button);
                 view.setTag(viewHolder);
             } else {

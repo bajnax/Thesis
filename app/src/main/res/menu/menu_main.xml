@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".LeScanActivity">
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/action_refresh"
+        android:checkable="true"
+        android:enabled="false"
+        android:icon="@drawable/ic_refresh_white"
         android:orderInCategory="200"
-        android:title="Search"
-        android:icon="@drawable/ic_refresh"
-        app:showAsAction="ifRoom"/>
+        android:title="@string/refresh_btn"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
 
 </menu>

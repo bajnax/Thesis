@@ -4,11 +4,17 @@
 
     <item
         android:id="@+id/action_refresh"
-
-        android:icon="@drawable/ic_refresh_white"
+        android:icon="@drawable/ic_start_scanning"
         android:orderInCategory="200"
         android:title="@string/refresh_btn"
         android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_pause_scanning"
+        android:icon="@drawable/ic_pause_scanning"
+        android:orderInCategory="200"
+        android:title="@string/pause_btn"
+        android:visible="false"
         app:showAsAction="ifRoom" />
 
 </menu>

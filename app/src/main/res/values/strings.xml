@@ -8,6 +8,7 @@
     <string name="stop_look_up_btn_txt">Stop</string>
     <string name="connect_btn_txt">Connect</string>
     <string name="refresh_btn">Refresh</string>
+    <string name="pause_btn">Pause</string>
 
     <string name="device_name">Device Name</string>
     <string name="device_address">Device Address</string>

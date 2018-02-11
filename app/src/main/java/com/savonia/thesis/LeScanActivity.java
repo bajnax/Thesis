@@ -10,7 +10,6 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -47,12 +46,13 @@ public class LeScanActivity extends AppCompatActivity {
     private Toolbar toolBar;
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private ListView devicesList;
-    private boolean isScanning;
+    private boolean isScanning = false;
     // Stops scanning after 7 seconds.
     private static final long SCAN_PERIOD = 7000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_scan);
         lookUp =  (Button) findViewById(R.id.lookUpBtn);
@@ -78,11 +78,7 @@ public class LeScanActivity extends AppCompatActivity {
         lookUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if (isAccessFineLocationAllowed())
                     scanLeDevice(true);
-                else
-                    requestAccessFineLocation();
             }
         });
 
@@ -115,21 +111,36 @@ public class LeScanActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if(isScanning) {
+            menu.findItem(R.id.action_refresh).setVisible(false);
+            menu.findItem(R.id.action_pause_scanning).setVisible(true);
+        } else {
+            menu.findItem(R.id.action_refresh).setVisible(true);
+            menu.findItem(R.id.action_pause_scanning).setVisible(false);
+        }
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_refresh: {
-                if(!isScanning) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLeDeviceListAdapter.clear();
-                            mLeDeviceListAdapter.notifyDataSetChanged();
-                        }
-                    });
-                    scanLeDevice(true);
-                } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLeDeviceListAdapter.clear();
+                        mLeDeviceListAdapter.notifyDataSetChanged();
+                    }
+                });
+                scanLeDevice(true);
+
+                return true;
+            }
+            case R.id.action_pause_scanning: {
+                if(isScanning)
                     scanLeDevice(false);
-                }
+
                 return true;
             }
             default:
@@ -137,7 +148,6 @@ public class LeScanActivity extends AppCompatActivity {
         }
 
     }
-
 
     @Override
     public void onPause() {
@@ -164,6 +174,7 @@ public class LeScanActivity extends AppCompatActivity {
         // spinner and textView becomes visible
         if(mLeDeviceListAdapter.getCount() == 0) {
             lookUp.setVisibility(View.GONE);
+            invalidateOptionsMenu();
 
             stopLookUp.setVisibility(View.VISIBLE);
             spinner.setVisibility(View.VISIBLE);
@@ -179,6 +190,7 @@ public class LeScanActivity extends AppCompatActivity {
             devicesList.setVisibility(View.GONE);
             stopLookUp.setVisibility(View.GONE);
             spinner.setVisibility(View.GONE);
+            invalidateOptionsMenu();
 
             lookUp.setVisibility(View.VISIBLE);
             lookUpText.setVisibility(View.VISIBLE);
@@ -191,95 +203,49 @@ public class LeScanActivity extends AppCompatActivity {
         spinner.setVisibility(View.GONE);
         lookUp.setVisibility(View.GONE);
         lookUpText.setVisibility(View.GONE);
+        invalidateOptionsMenu();
 
         // replacing old layout with listView
         devicesList.setVisibility(View.VISIBLE);
-    }
-
-
-    private boolean isAccessFineLocationAllowed() {
-        if (ContextCompat.checkSelfPermission(LeScanActivity.this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
-            return false;
-        else
-            return true;
-
-    }
-
-    private void requestAccessFineLocation() {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(LeScanActivity.this,
-                Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-            // If the user denied the permission previously, it will be shown again
-            ActivityCompat.requestPermissions(LeScanActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-
-        } else {
-            ActivityCompat.requestPermissions(LeScanActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    Toast.makeText(LeScanActivity.this, "Permission Granted!",
-                            Toast.LENGTH_SHORT).show();
-
-                    startScanning();
-
-                } else {
-
-                    Toast.makeText(LeScanActivity.this, "Permission Denied!",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
     }
 
     private void scanLeDevice(final boolean enable) {
 
         final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
-        if (enable) {
+        if (isAccessFineLocationAllowed()) {
+            if (enable) {
+                // Stops scanning after a pre-defined scan period
+                // if some BLE device is found
 
-            // TODO get rid of postDelayed scan stop and replace 'refresh' to 'stop' icon during scanning
+                // Otherwise, the user should stop scanning manually
+                // or pause the app
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mLeDeviceListAdapter.getCount() > 0) {
+                            // if the listView is filled, but scanning was still 'on' in the background
+                            bluetoothLeScanner.stopScan(myLeScanCallback);
+                            isScanning = false;
+                            invalidateOptionsMenu();
+                            Toast.makeText(LeScanActivity.this, "Stopped scanning!",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, SCAN_PERIOD);
 
-            // scan period seems redundant, since 'onPause' method
-            // stops scanning + user can stop scanning manually.
-            // Therefore, battery won't get drained in the background.
+                bluetoothLeScanner.startScan(myLeScanCallback);
+                isScanning = true;
+                startScanning();
 
-            // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    stopScanning();
-                    lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning_failed));
-                    bluetoothLeScanner.stopScan(myLeScanCallback);
-                    isScanning = false;
-                }
-            }, SCAN_PERIOD);
-
-            startScanning();
-            bluetoothLeScanner.startScan(myLeScanCallback);
-            isScanning = true;
-
-        } else {
-            stopScanning();
-            bluetoothLeScanner.stopScan(myLeScanCallback);
-            isScanning = false;
-        }
+            } else {
+                bluetoothLeScanner.stopScan(myLeScanCallback);
+                isScanning = false;
+                stopScanning();
+            }
+        } else
+            requestAccessFineLocation();
     }
-
 
     private ScanCallback myLeScanCallback = new ScanCallback() {
 
@@ -302,17 +268,17 @@ public class LeScanActivity extends AppCompatActivity {
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
-            if(mLeDeviceListAdapter.getCount() == 0) {
+            /*if(mLeDeviceListAdapter.getCount() == 0) {
                 stopScanning();
-            }
+            }*/
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            if(mLeDeviceListAdapter.getCount() == 0) {
+            /*if(mLeDeviceListAdapter.getCount() == 0) {
                 stopScanning();
-            }
+            }*/
         }
 
     };
@@ -360,14 +326,14 @@ public class LeScanActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
-            // General ListView optimization code.
+
             if (view == null) {
                 view = mInflator.inflate(R.layout.devices_item, null);
                 viewHolder = new ViewHolder();
                 viewHolder.deviceName = (TextView) view.findViewById(R.id.deviceNameTxtV);
                 viewHolder.deviceAddress = (TextView) view.findViewById(R.id.deviceAddressTxtV);
 
-                // TODO insert an icon into the 'connect' button intead of the text
+                // TODO insert an icon into the 'connect' button instead of the text
                 viewHolder.connect_btn = (Button) view.findViewById(R.id.connect_button);
                 view.setTag(viewHolder);
             } else {
@@ -398,6 +364,53 @@ public class LeScanActivity extends AppCompatActivity {
         TextView deviceName;
         TextView deviceAddress;
         Button connect_btn;
+    }
+
+    private boolean isAccessFineLocationAllowed() {
+        if (ContextCompat.checkSelfPermission(LeScanActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+            return false;
+        else
+            return true;
+
+    }
+
+    private void requestAccessFineLocation() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(LeScanActivity.this,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+            // If the user denied the permission previously, it will be shown again
+            ActivityCompat.requestPermissions(LeScanActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+        } else {
+            ActivityCompat.requestPermissions(LeScanActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    Toast.makeText(LeScanActivity.this, "Permission Granted!",
+                            Toast.LENGTH_SHORT).show();
+
+                } else {
+
+                    Toast.makeText(LeScanActivity.this, "Permission Denied!",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 
 }

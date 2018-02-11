@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -46,8 +47,9 @@ public class LeScanActivity extends AppCompatActivity {
     private Toolbar toolBar;
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private ListView devicesList;
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+    private boolean isScanning;
+    // Stops scanning after 7 seconds.
+    private static final long SCAN_PERIOD = 7000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,22 +118,30 @@ public class LeScanActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_refresh: {
-                Toast.makeText(this, "Refresh selected", Toast.LENGTH_SHORT).show();
-                //TODO create 'refresh' method and call it from here
+                if(!isScanning) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mLeDeviceListAdapter.clear();
+                            mLeDeviceListAdapter.notifyDataSetChanged();
+                        }
+                    });
+                    scanLeDevice(true);
+                } else {
+                    scanLeDevice(false);
+                }
+                return true;
             }
-                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
 
-        return true;
     }
 
 
     @Override
     public void onPause() {
         super.onPause();
-
         scanLeDevice(false);
     }
 
@@ -146,9 +156,6 @@ public class LeScanActivity extends AppCompatActivity {
                 mLeDeviceListAdapter.notifyDataSetChanged();
             }
         });
-
-        //mLeDeviceListAdapter.clear();
-        //mLeDeviceListAdapter.notifyDataSetChanged();
         stopScanning();
     }
 
@@ -187,8 +194,6 @@ public class LeScanActivity extends AppCompatActivity {
 
         // replacing old layout with listView
         devicesList.setVisibility(View.VISIBLE);
-
-        // TODO add refresh button to the toolbar and set it to 'VISIBLE' here
     }
 
 
@@ -247,6 +252,12 @@ public class LeScanActivity extends AppCompatActivity {
 
         if (enable) {
 
+            // TODO get rid of postDelayed scan stop and replace 'refresh' to 'stop' icon during scanning
+
+            // scan period seems redundant, since 'onPause' method
+            // stops scanning + user can stop scanning manually.
+            // Therefore, battery won't get drained in the background.
+
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
@@ -254,15 +265,18 @@ public class LeScanActivity extends AppCompatActivity {
                     stopScanning();
                     lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning_failed));
                     bluetoothLeScanner.stopScan(myLeScanCallback);
+                    isScanning = false;
                 }
             }, SCAN_PERIOD);
 
             startScanning();
             bluetoothLeScanner.startScan(myLeScanCallback);
+            isScanning = true;
 
         } else {
             stopScanning();
             bluetoothLeScanner.stopScan(myLeScanCallback);
+            isScanning = false;
         }
     }
 

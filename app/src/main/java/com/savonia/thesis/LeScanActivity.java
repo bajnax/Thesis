@@ -107,7 +107,7 @@ public class LeScanActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this adds 'refresh' item to the action bar
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -139,28 +139,44 @@ public class LeScanActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();  // Always call the superclass method first
 
-        mLeDeviceListAdapter.clear();
-        mLeDeviceListAdapter.notifyDataSetChanged();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mLeDeviceListAdapter.clear();
+                mLeDeviceListAdapter.notifyDataSetChanged();
+            }
+        });
+
+        //mLeDeviceListAdapter.clear();
+        //mLeDeviceListAdapter.notifyDataSetChanged();
         stopScanning();
     }
 
     private void startScanning() {
-        lookUp.setVisibility(View.GONE);
+        // if the listView is empty, then layout with 'stop' button,
+        // spinner and textView becomes visible
+        if(mLeDeviceListAdapter.getCount() == 0) {
+            lookUp.setVisibility(View.GONE);
 
-        stopLookUp.setVisibility(View.VISIBLE);
-        spinner.setVisibility(View.VISIBLE);
-        lookUpText.setVisibility(View.VISIBLE);
-        lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
+            stopLookUp.setVisibility(View.VISIBLE);
+            spinner.setVisibility(View.VISIBLE);
+            lookUpText.setVisibility(View.VISIBLE);
+            lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
+        }
     }
 
     private void stopScanning() {
-        devicesList.setVisibility(View.GONE);
-        stopLookUp.setVisibility(View.GONE);
-        spinner.setVisibility(View.GONE);
+        // if the listView is empty, then layout with 'scan' button
+        // and textView is shown
+        if(mLeDeviceListAdapter.getCount() == 0) {
+            devicesList.setVisibility(View.GONE);
+            stopLookUp.setVisibility(View.GONE);
+            spinner.setVisibility(View.GONE);
 
-        lookUp.setVisibility(View.VISIBLE);
-        lookUpText.setVisibility(View.VISIBLE);
-        lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
+            lookUp.setVisibility(View.VISIBLE);
+            lookUpText.setVisibility(View.VISIBLE);
+            lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
+        }
     }
 
     private void scanFinished() {
@@ -235,14 +251,11 @@ public class LeScanActivity extends AppCompatActivity {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if(mLeDeviceListAdapter.getCount() == 0) {
-                        stopScanning();
-                        lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning_failed));
-                    }
+                    stopScanning();
+                    lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning_failed));
                     bluetoothLeScanner.stopScan(myLeScanCallback);
                 }
             }, SCAN_PERIOD);
-
 
             startScanning();
             bluetoothLeScanner.startScan(myLeScanCallback);
@@ -290,7 +303,7 @@ public class LeScanActivity extends AppCompatActivity {
 
     };
 
-    // Adapter for holding devices found through scanning.
+    // Adapter for holding devices, which are found during scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
         private ArrayList<BluetoothDevice> mLeDevices;
         private LayoutInflater mInflator;

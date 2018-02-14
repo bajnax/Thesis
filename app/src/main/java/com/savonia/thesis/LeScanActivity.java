@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -46,8 +47,11 @@ public class LeScanActivity extends AppCompatActivity {
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private ListView devicesList;
     private boolean isScanning = false;
+    private LocationManager locationManager;
+
     // Stops scanning after 7 seconds.
     private static final long SCAN_PERIOD = 7000;
+
 
 
     @Override
@@ -87,11 +91,26 @@ public class LeScanActivity extends AppCompatActivity {
             Toast.makeText(this, "BLE is not supported on your device!",
                     Toast.LENGTH_LONG).show();
             finish();
+        } else  if(!hasGPSDevice(LeScanActivity.this)) {
+            Toast.makeText(this,"Gps not Supported",Toast.LENGTH_LONG).show();
+            finish();
         } else {
             // Initializes Bluetooth adapter.
             final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             mBluetoothAdapter = bluetoothManager.getAdapter();
         }
+    }
+
+
+    private boolean hasGPSDevice(Context context) {
+        final LocationManager mgr = (LocationManager) context
+                .getSystemService(Context.LOCATION_SERVICE);
+        if (mgr == null)
+            return false;
+        final List<String> providers = mgr.getAllProviders();
+        if (providers == null)
+            return false;
+        return providers.contains(LocationManager.GPS_PROVIDER);
     }
 
 
@@ -161,9 +180,6 @@ public class LeScanActivity extends AppCompatActivity {
         // if BLE is not working
         checkBluetooth();
 
-        // if GPS is not working
-        checkLocationServices();
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -224,7 +240,6 @@ public class LeScanActivity extends AppCompatActivity {
 
         if (isAccessFineLocationAllowed()) {
 
-            checkLocationServices();
             checkBluetooth();
 
             final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -452,13 +467,5 @@ public class LeScanActivity extends AppCompatActivity {
         }
     }
 
-
-    // Checks the location services' status
-    public void checkLocationServices() {
-
-        // TODO: startActivityForResult to enable GPS
-        // if unavailable, call 'finish()'
-
-    }
 
 }

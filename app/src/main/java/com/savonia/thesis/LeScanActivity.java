@@ -14,6 +14,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -37,7 +38,8 @@ import java.util.List;
 public class LeScanActivity extends AppCompatActivity {
 
     private final static int REQUEST_ENABLE_BT = 1;
-    private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private final static int REQUEST_ENABLE_LS = 2;
+    private final static int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
     private BluetoothAdapter mBluetoothAdapter;
     private Button lookUp;
     private ProgressBar spinner;
@@ -98,6 +100,8 @@ public class LeScanActivity extends AppCompatActivity {
             // Initializes Bluetooth adapter.
             final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             mBluetoothAdapter = bluetoothManager.getAdapter();
+
+
         }
     }
 
@@ -151,7 +155,7 @@ public class LeScanActivity extends AppCompatActivity {
                 return true;
             }
             case R.id.action_pause_scanning: {
-                if(isScanning)
+                //if(isScanning)
                     scanLeDevice(false);
 
                 return true;
@@ -220,6 +224,8 @@ public class LeScanActivity extends AppCompatActivity {
             lookUp.setText(R.string.look_up_btn_txt);
             lookUpText.setVisibility(View.VISIBLE);
             lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
+        } else {
+            invalidateOptionsMenu();
         }
     }
 
@@ -238,7 +244,7 @@ public class LeScanActivity extends AppCompatActivity {
 
     private void scanLeDevice(final boolean enable) {
 
-        if (isAccessFineLocationAllowed()) {
+        if (isAccessCoarseLocationAllowed()) {
 
             checkBluetooth();
 
@@ -250,7 +256,8 @@ public class LeScanActivity extends AppCompatActivity {
 
                 // Otherwise, the user should stop scanning manually
                 // or pause the app
-                mHandler.postDelayed(new Runnable() {
+
+                /*mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (mLeDeviceListAdapter.getCount() > 0) {
@@ -262,7 +269,9 @@ public class LeScanActivity extends AppCompatActivity {
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
-                }, SCAN_PERIOD);
+                }, SCAN_PERIOD);*/
+
+                // TODO: instead of the postDelayed stop, modify the layout during the search with listView
 
                 bluetoothLeScanner.startScan(myLeScanCallback);
                 isScanning = true;
@@ -274,7 +283,7 @@ public class LeScanActivity extends AppCompatActivity {
                 stopScanning();
             }
         } else {
-            requestAccessFineLocation();
+            requestAccessCoarseLocation();
             checkBluetooth();
         }
 
@@ -400,9 +409,9 @@ public class LeScanActivity extends AppCompatActivity {
         Button connect_btn;
     }
 
-    private boolean isAccessFineLocationAllowed() {
+    private boolean isAccessCoarseLocationAllowed() {
         if (ContextCompat.checkSelfPermission(LeScanActivity.this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
+                Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
             return false;
         else
@@ -410,11 +419,11 @@ public class LeScanActivity extends AppCompatActivity {
 
     }
 
-    private void requestAccessFineLocation() {
+    private void requestAccessCoarseLocation() {
 
         ActivityCompat.requestPermissions(LeScanActivity.this,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
 
     }
 
@@ -422,7 +431,7 @@ public class LeScanActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+            case MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION: {
 
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
@@ -465,6 +474,12 @@ public class LeScanActivity extends AppCompatActivity {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
+    }
+
+
+    public void checkLocation() {
+            Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivityForResult(enableLocationIntent, REQUEST_ENABLE_LS);
     }
 
 

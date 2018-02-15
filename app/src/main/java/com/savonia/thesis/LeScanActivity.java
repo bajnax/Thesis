@@ -264,7 +264,7 @@ public class LeScanActivity extends AppCompatActivity {
 
             checkBluetooth();
 
-            if (isAccessFineLocationAllowed())// && !isLocationEnabled())
+            if (isAccessFineLocationAllowed() && !isLocationEnabled())
                 enableLocation();
         }
 
@@ -499,11 +499,11 @@ public class LeScanActivity extends AppCompatActivity {
 
 
     public void enableLocation() {
-        // TODO: enable location services
-        final AlertDialog.Builder dialog = new AlertDialog.Builder(LeScanActivity.this);
+        // TODO: enable location services pops up twice ??
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 
         dialog.setMessage("Your GPS seems to be disabled, do you want to enable it?")
-                .setCancelable(true)
+                .setCancelable(false)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
@@ -514,7 +514,8 @@ public class LeScanActivity extends AppCompatActivity {
                         dialog.cancel();
                     }
                 });
-
+        /*AlertDialog alert = dialog.create();
+        alert.show();*/
         dialog.show();
     }
 

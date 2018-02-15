@@ -10,14 +10,10 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
-import android.os.Handler;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -35,18 +31,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStates;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,9 +51,6 @@ public class LeScanActivity extends AppCompatActivity {
     private boolean isGpsEnabled;
     private boolean isNetworkEnabled;
     private LocationManager mLocationManager;
-
-    // Stops scanning after 7 seconds.
-    private static final long SCAN_PERIOD = 7000;
 
 
 
@@ -105,34 +86,31 @@ public class LeScanActivity extends AppCompatActivity {
             }
         });
 
+        // Comparing hardware's compatibility with the requirements of the app
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, "BLE is not supported on your device!",
                     Toast.LENGTH_LONG).show();
             finish();
-        } else  if(!hasGPSDevice(LeScanActivity.this)) {
-            Toast.makeText(this,"Gps not Supported",Toast.LENGTH_LONG).show();
-            finish();
         } else {
-
-            // Initializes Bluetooth adapter.
+            // Initializing Bluetooth adapter.
             final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             mBluetoothAdapter = bluetoothManager.getAdapter();
 
-            mLocationManager = (LocationManager) this
-                    .getSystemService(LOCATION_SERVICE);
+            // Initializing location manager
+            mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+
+            // Enabling Bluetooth, if it is disabled
+            checkBluetooth();
+
+            if (!isAccessFineLocationAllowed()) {
+                // Requesting location permissions, if not granted
+                requestAccessFineLocation();
+            }
+            else if(!isLocationEnabled()){
+                // Enabling location services, if they are disabled
+                enableLocation();
+            }
         }
-    }
-
-
-    private boolean hasGPSDevice(Context context) {
-        final LocationManager mgr = (LocationManager) context
-                .getSystemService(Context.LOCATION_SERVICE);
-        if (mgr == null)
-            return false;
-        final List<String> providers = mgr.getAllProviders();
-        if (providers == null)
-            return false;
-        return providers.contains(LocationManager.GPS_PROVIDER);
     }
 
 
@@ -199,15 +177,6 @@ public class LeScanActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
 
-        // if BLE is not working
-        checkBluetooth();
-
-        if (!isAccessFineLocationAllowed())
-            requestAccessFineLocation();
-
-        if (isAccessFineLocationAllowed() && !isLocationEnabled())
-            enableLocation();
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -269,7 +238,7 @@ public class LeScanActivity extends AppCompatActivity {
     private void scanLeDevice(final boolean enable) {
 
         // TODO: before scanning, make sure that bluetooth and location services are turned on and permission is granted
-        if (isAccessFineLocationAllowed() && isLocationEnabled() && mBluetoothAdapter.isEnabled()) {
+        if (isAccessFineLocationAllowed() && mBluetoothAdapter.isEnabled() && isLocationEnabled()) {
 
             final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
@@ -289,10 +258,13 @@ public class LeScanActivity extends AppCompatActivity {
                 stopScanning();
             }
         } else {
-            requestAccessFineLocation();
+            if(!isAccessFineLocationAllowed()){
+                requestAccessFineLocation();
+            }
+
             checkBluetooth();
 
-            if (isAccessFineLocationAllowed() && !isLocationEnabled())
+            if (isAccessFineLocationAllowed())// && !isLocationEnabled())
                 enableLocation();
         }
 
@@ -510,8 +482,9 @@ public class LeScanActivity extends AppCompatActivity {
     public boolean isLocationEnabled() {
         if(isAccessFineLocationAllowed()) {
 
-            if(mLocationManager == null)
+            if(mLocationManager == null) {
                 mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            }
 
             isGpsEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             isNetworkEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
@@ -520,19 +493,17 @@ public class LeScanActivity extends AppCompatActivity {
                 return false;
             else
                 return true;
-        } else {
-            requestAccessFineLocation();
+        } else
             return false;
-        }
-
-
     }
+
 
     public void enableLocation() {
         // TODO: enable location services
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
-                .setCancelable(false)
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(LeScanActivity.this);
+
+        dialog.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setCancelable(true)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
@@ -543,8 +514,8 @@ public class LeScanActivity extends AppCompatActivity {
                         dialog.cancel();
                     }
                 });
-        final AlertDialog alert = builder.create();
-        alert.show();
+
+        dialog.show();
     }
 
 

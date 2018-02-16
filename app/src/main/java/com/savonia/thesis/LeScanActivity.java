@@ -237,10 +237,11 @@ public class LeScanActivity extends AppCompatActivity {
 
     private void scanLeDevice(final boolean enable) {
 
-        // TODO: before scanning, make sure that bluetooth and location services are turned on and permission is granted
-        if (isAccessFineLocationAllowed() && mBluetoothAdapter.isEnabled() && isLocationEnabled()) {
+        final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
-            final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        // before scanning, the app makes sure that bluetooth and
+        // location services are turned on and permission is granted
+        if (isAccessFineLocationAllowed() && mBluetoothAdapter.isEnabled() && isLocationEnabled()) {
 
             if (enable) {
                 // the user should stop scanning manually
@@ -258,14 +259,23 @@ public class LeScanActivity extends AppCompatActivity {
                 stopScanning();
             }
         } else {
-            if(!isAccessFineLocationAllowed()){
-                requestAccessFineLocation();
+
+            if(enable) {
+                if (!isAccessFineLocationAllowed()) {
+                    requestAccessFineLocation();
+                }
+
+                checkBluetooth();
+
+                if (isAccessFineLocationAllowed() && !isLocationEnabled())
+                    enableLocation();
+
+            } else {
+                // if location was disabled during scanning
+                bluetoothLeScanner.stopScan(myLeScanCallback);
+                isScanning = false;
+                stopScanning();
             }
-
-            checkBluetooth();
-
-            if (isAccessFineLocationAllowed() && !isLocationEnabled())
-                enableLocation();
         }
 
     }
@@ -425,9 +435,6 @@ public class LeScanActivity extends AppCompatActivity {
                     Toast.makeText(LeScanActivity.this, "Permission Denied! The app " +
                                     "won't function without this permission",
                             Toast.LENGTH_LONG).show();
-
-                    // TODO: request over and over again or finish() ??
-                    //requestAccessFineLocation();
                 }
             }
         }
@@ -444,9 +451,6 @@ public class LeScanActivity extends AppCompatActivity {
                 Toast.makeText(LeScanActivity.this, "The app " +
                                 "won't function if you don't enable BLE!",
                         Toast.LENGTH_LONG).show();
-
-                // TODO: request over and over again ??
-                //checkBluetooth();
             }
         } else if (requestCode == REQUEST_ENABLE_LS) {
 
@@ -459,9 +463,6 @@ public class LeScanActivity extends AppCompatActivity {
                     Toast.makeText(LeScanActivity.this, "The app " +
                                     "won't function without enabled location services",
                             Toast.LENGTH_LONG).show();
-
-                    // TODO: request over and over again ??
-                    //checkLocation();
                     break;
                 default:
                     break;
@@ -499,10 +500,10 @@ public class LeScanActivity extends AppCompatActivity {
 
 
     public void enableLocation() {
-        // TODO: enable location services pops up twice ??
         final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 
-        dialog.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+        dialog.setMessage("The app won't function without location services," +
+                " do you want to enable them?")
                 .setCancelable(false)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
@@ -514,8 +515,6 @@ public class LeScanActivity extends AppCompatActivity {
                         dialog.cancel();
                     }
                 });
-        /*AlertDialog alert = dialog.create();
-        alert.show();*/
         dialog.show();
     }
 

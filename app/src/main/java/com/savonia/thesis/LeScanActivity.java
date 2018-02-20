@@ -10,16 +10,19 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MarginLayoutParamsCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,6 +34,19 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +60,7 @@ public class LeScanActivity extends AppCompatActivity {
     private Button lookUp;
     private ProgressBar spinner;
     private TextView lookUpText;
+    private TextView scanningStatusText;
     private Toolbar toolBar;
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private ListView devicesList;
@@ -51,8 +68,7 @@ public class LeScanActivity extends AppCompatActivity {
     private boolean isGpsEnabled;
     private boolean isNetworkEnabled;
     private LocationManager mLocationManager;
-
-
+    private GoogleApiClient googleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +78,7 @@ public class LeScanActivity extends AppCompatActivity {
         lookUp =  (Button) findViewById(R.id.lookUpBtn);
         spinner = (ProgressBar) findViewById(R.id.spinner);
         lookUpText = (TextView) findViewById(R.id.lookUpTextView);
+        scanningStatusText = (TextView) findViewById(R.id.scanningStatusTextView);
         devicesList = (ListView) findViewById(R.id.devices_list);
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
@@ -72,9 +89,7 @@ public class LeScanActivity extends AppCompatActivity {
         Drawable progressDrawable = spinner.getIndeterminateDrawable().mutate();
         progressDrawable.setColorFilter(getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
         spinner.setProgressDrawable(progressDrawable);
-
-        // Initially, the 'Stop' button and the 'spinner' are gone
-        spinner.setVisibility(View.GONE);
+        spinner.setVisibility(View.INVISIBLE);
 
         lookUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -197,10 +212,12 @@ public class LeScanActivity extends AppCompatActivity {
 
             lookUp.setVisibility(View.VISIBLE);
             lookUp.setText(R.string.stop_look_up_btn_txt);
-            spinner.setVisibility(View.VISIBLE);
+            //spinner.setVisibility(View.VISIBLE);
             lookUpText.setVisibility(View.VISIBLE);
             lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
         }
+        scanningStatusText.setText(R.string.scanning_status_active);
+        spinner.setVisibility(View.VISIBLE);
     }
 
 
@@ -210,7 +227,7 @@ public class LeScanActivity extends AppCompatActivity {
         // and textView is shown
         if(mLeDeviceListAdapter.getCount() == 0) {
             devicesList.setVisibility(View.GONE);
-            spinner.setVisibility(View.GONE);
+            //spinner.setVisibility(View.GONE);
             invalidateOptionsMenu();
 
             lookUp.setVisibility(View.VISIBLE);
@@ -220,12 +237,14 @@ public class LeScanActivity extends AppCompatActivity {
         } else {
             invalidateOptionsMenu();
         }
+        scanningStatusText.setText(R.string.scanning_status_inactive);
+        spinner.setVisibility(View.INVISIBLE);
     }
 
 
     private void scanFinished() {
         lookUp.setText(R.string.look_up_btn_txt);
-        spinner.setVisibility(View.GONE);
+        //spinner.setVisibility(View.GONE);
         lookUp.setVisibility(View.GONE);
         lookUpText.setVisibility(View.GONE);
         invalidateOptionsMenu();
@@ -247,14 +266,14 @@ public class LeScanActivity extends AppCompatActivity {
                 // the user should stop scanning manually
                 // or pause the app
 
-                // TODO: modify the layout during the search with listView
-
                 bluetoothLeScanner.startScan(myLeScanCallback);
+                //scanningStatusText.setText(R.string.scanning_status_active);
                 isScanning = true;
                 startScanning();
 
             } else {
                 bluetoothLeScanner.stopScan(myLeScanCallback);
+                //scanningStatusText.setText(R.string.scanning_status_inactive);
                 isScanning = false;
                 stopScanning();
             }
@@ -273,6 +292,7 @@ public class LeScanActivity extends AppCompatActivity {
             } else {
                 // if location was disabled during scanning
                 bluetoothLeScanner.stopScan(myLeScanCallback);
+                //scanningStatusText.setText(R.string.scanning_status_inactive);
                 isScanning = false;
                 stopScanning();
             }
@@ -500,7 +520,63 @@ public class LeScanActivity extends AppCompatActivity {
 
 
     public void enableLocation() {
-        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(LeScanActivity.this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                        @Override
+                        public void onConnected(Bundle bundle) {
+
+                        }
+
+                        @Override
+                        public void onConnectionSuspended(int i) {
+                            googleApiClient.connect();
+                        }
+                    })
+                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(ConnectionResult connectionResult) {
+
+                            Log.d("Location error", "Location error " + connectionResult.getErrorCode());
+                        }
+                    }).build();
+            googleApiClient.connect();
+        }
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(30 * 1000);
+        locationRequest.setFastestInterval(5 * 1000);
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+
+        builder.setAlwaysShow(true);
+
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(LeScanActivity.this, REQUEST_ENABLE_LS);
+
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                }
+            }
+        });
+
+
+        /*final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 
         dialog.setMessage("The app won't function without location services," +
                 " do you want to enable them?")
@@ -515,7 +591,7 @@ public class LeScanActivity extends AppCompatActivity {
                         dialog.cancel();
                     }
                 });
-        dialog.show();
+        dialog.show();*/
     }
 
 

@@ -13,5 +13,7 @@
     <string name="device_name">Device Name</string>
     <string name="device_address">Device Address</string>
     <string name="unknown_device">Unknown Device</string>
+    <string name="scanning_status_active"><b>Scanning status: SCANNING</b></string>
+    <string name="scanning_status_inactive"><b>Scanning status: INACTIVE</b></string>
 
 </resources>

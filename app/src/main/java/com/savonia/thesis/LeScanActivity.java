@@ -70,6 +70,7 @@ public class LeScanActivity extends AppCompatActivity {
     private LocationManager mLocationManager;
     private GoogleApiClient googleApiClient;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -212,10 +213,11 @@ public class LeScanActivity extends AppCompatActivity {
 
             lookUp.setVisibility(View.VISIBLE);
             lookUp.setText(R.string.stop_look_up_btn_txt);
-            //spinner.setVisibility(View.VISIBLE);
             lookUpText.setVisibility(View.VISIBLE);
             lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
         }
+
+        // noticeable changes of the scanning status in the layout
         scanningStatusText.setText(R.string.scanning_status_active);
         spinner.setVisibility(View.VISIBLE);
     }
@@ -226,8 +228,7 @@ public class LeScanActivity extends AppCompatActivity {
         // if the listView is empty, then layout with 'scan' button
         // and textView is shown
         if(mLeDeviceListAdapter.getCount() == 0) {
-            devicesList.setVisibility(View.GONE);
-            //spinner.setVisibility(View.GONE);
+            devicesList.setVisibility(View.INVISIBLE);
             invalidateOptionsMenu();
 
             lookUp.setVisibility(View.VISIBLE);
@@ -235,21 +236,23 @@ public class LeScanActivity extends AppCompatActivity {
             lookUpText.setVisibility(View.VISIBLE);
             lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
         } else {
+            // if any devices are found, the toolbar icon 'refresh' is shown
             invalidateOptionsMenu();
         }
+
+        // noticeable changes of the scanning status in the layout
         scanningStatusText.setText(R.string.scanning_status_inactive);
         spinner.setVisibility(View.INVISIBLE);
     }
 
-
+    // in case any devices are found
     private void scanFinished() {
         lookUp.setText(R.string.look_up_btn_txt);
-        //spinner.setVisibility(View.GONE);
         lookUp.setVisibility(View.GONE);
         lookUpText.setVisibility(View.GONE);
         invalidateOptionsMenu();
 
-        // replacing old layout with listView
+        // listView with devices shows up
         devicesList.setVisibility(View.VISIBLE);
     }
 
@@ -259,21 +262,18 @@ public class LeScanActivity extends AppCompatActivity {
         final BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
         // before scanning, the app makes sure that bluetooth and
-        // location services are turned on and permission is granted
+        // location services are turned on and required permissions are granted
         if (isAccessFineLocationAllowed() && mBluetoothAdapter.isEnabled() && isLocationEnabled()) {
 
             if (enable) {
                 // the user should stop scanning manually
                 // or pause the app
-
                 bluetoothLeScanner.startScan(myLeScanCallback);
-                //scanningStatusText.setText(R.string.scanning_status_active);
                 isScanning = true;
                 startScanning();
 
             } else {
                 bluetoothLeScanner.stopScan(myLeScanCallback);
-                //scanningStatusText.setText(R.string.scanning_status_inactive);
                 isScanning = false;
                 stopScanning();
             }
@@ -290,9 +290,10 @@ public class LeScanActivity extends AppCompatActivity {
                     enableLocation();
 
             } else {
-                // if location was disabled during scanning
-                bluetoothLeScanner.stopScan(myLeScanCallback);
-                //scanningStatusText.setText(R.string.scanning_status_inactive);
+                // if location or was disabled during scanning
+                if(mBluetoothAdapter.isEnabled())
+                    bluetoothLeScanner.stopScan(myLeScanCallback);
+
                 isScanning = false;
                 stopScanning();
             }
@@ -322,20 +323,17 @@ public class LeScanActivity extends AppCompatActivity {
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
-            /*if(mLeDeviceListAdapter.getCount() == 0) {
-                stopScanning();
-            }*/
+            stopScanning();
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            /*if(mLeDeviceListAdapter.getCount() == 0) {
-                stopScanning();
-            }*/
+            stopScanning();
         }
 
     };
+
 
     // Adapter for holding devices, which are found during scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
@@ -420,6 +418,7 @@ public class LeScanActivity extends AppCompatActivity {
         Button connect_btn;
     }
 
+
     private boolean isAccessFineLocationAllowed() {
         if (ContextCompat.checkSelfPermission(LeScanActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -430,6 +429,7 @@ public class LeScanActivity extends AppCompatActivity {
 
     }
 
+
     private void requestAccessFineLocation() {
 
         ActivityCompat.requestPermissions(LeScanActivity.this,
@@ -437,6 +437,7 @@ public class LeScanActivity extends AppCompatActivity {
                 MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
 
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -459,6 +460,7 @@ public class LeScanActivity extends AppCompatActivity {
             }
         }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -574,24 +576,6 @@ public class LeScanActivity extends AppCompatActivity {
                 }
             }
         });
-
-
-        /*final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-
-        dialog.setMessage("The app won't function without location services," +
-                " do you want to enable them?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        dialog.cancel();
-                    }
-                });
-        dialog.show();*/
     }
 
 

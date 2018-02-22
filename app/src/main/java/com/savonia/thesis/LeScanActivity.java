@@ -3,10 +3,14 @@ package com.savonia.thesis;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -268,6 +272,21 @@ public class LeScanActivity extends AppCompatActivity {
             if (enable) {
                 // the user should stop scanning manually
                 // or pause the app
+
+                // TODO: filter by mac address??
+
+                /*ScanFilter scanFilter =
+                        new ScanFilter.Builder()
+                                .setServiceUuid(BluetoothLeService.ParcelUuid_GENUINO101_ledService)
+                                .build();
+                List<ScanFilter> scanFilters = new ArrayList<ScanFilter>();
+                scanFilters.add(scanFilter);
+
+                ScanSettings scanSettings =
+                        new ScanSettings.Builder().build();
+
+                bluetoothLeScanner.startScan(scanFilters, scanSettings, myLeScanCallback);*/
+
                 bluetoothLeScanner.startScan(myLeScanCallback);
                 isScanning = true;
                 startScanning();
@@ -304,7 +323,6 @@ public class LeScanActivity extends AppCompatActivity {
 
     private ScanCallback myLeScanCallback = new ScanCallback() {
 
-        // TODO: read about ScanCallback
         @Override
         public void onScanResult(int callbackType, final ScanResult result) {
 
@@ -321,14 +339,27 @@ public class LeScanActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBatchScanResults(List<ScanResult> results) {
+        public void onBatchScanResults(final List<ScanResult> results) {
             super.onBatchScanResults(results);
-            stopScanning();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    scanFinished();
+                    for(ScanResult result: results) {
+                        mLeDeviceListAdapter.addDevice(result.getDevice());
+                        mLeDeviceListAdapter.notifyDataSetChanged();
+                    }
+                }
+            });
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
+            Toast.makeText(LeScanActivity.this,
+                    "onScanFailed: " + String.valueOf(errorCode),
+                    Toast.LENGTH_LONG).show();
             stopScanning();
         }
 
@@ -392,7 +423,7 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
-            BluetoothDevice device = mLeDevices.get(position);
+            final BluetoothDevice device = mLeDevices.get(position);
             final String deviceName = device.getName();
             if (deviceName != null && deviceName.length() > 0)
                 viewHolder.deviceName.setText(deviceName);
@@ -404,6 +435,11 @@ public class LeScanActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     //TODO connecting to the selected device onClick of 'connect' button
+
+                    Toast.makeText(LeScanActivity.this, "Device address: " + device.getAddress(),
+                            Toast.LENGTH_SHORT).show();
+
+
                 }
             });
 
@@ -501,6 +537,8 @@ public class LeScanActivity extends AppCompatActivity {
         }
     }
 
+    // TODO: request internet permission
+
 
     public boolean isLocationEnabled() {
         if(isAccessFineLocationAllowed()) {
@@ -577,6 +615,26 @@ public class LeScanActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    /*private class GattClientCallback extends BluetoothGattCallback {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            super.onConnectionStateChange(gatt, status, newState);
+            if (status == BluetoothGatt.GATT_FAILURE) {
+                disconnectGattServer();
+                return;
+            } else if (status != BluetoothGatt.GATT_SUCCESS) {
+                disconnectGattServer();
+                return;
+            }
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                mConnected = true;
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                disconnectGattServer();
+            }
+        }
+    }*/
 
 
 }

@@ -15,5 +15,8 @@
     <string name="unknown_device">Unknown Device</string>
     <string name="scanning_status_active"><b>Scanning status: SCANNING</b></string>
     <string name="scanning_status_inactive"><b>Scanning status: INACTIVE</b></string>
+    <string name="service_name">Service name</string>
+    <string name="connect_service">Connect service</string>
+    <string name="device_status">Device status</string>
 
 </resources>

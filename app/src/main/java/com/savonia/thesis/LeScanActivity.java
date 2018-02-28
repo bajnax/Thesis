@@ -60,6 +60,7 @@ public class LeScanActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_ENABLE_LS = 3;
     private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
+
     private BluetoothAdapter mBluetoothAdapter;
     private Button lookUp;
     private ProgressBar spinner;
@@ -273,20 +274,6 @@ public class LeScanActivity extends AppCompatActivity {
                 // the user should stop scanning manually
                 // or pause the app
 
-                // TODO: filter by mac address??
-
-                /*ScanFilter scanFilter =
-                        new ScanFilter.Builder()
-                                .setServiceUuid(BluetoothLeService.ParcelUuid_GENUINO101_ledService)
-                                .build();
-                List<ScanFilter> scanFilters = new ArrayList<ScanFilter>();
-                scanFilters.add(scanFilter);
-
-                ScanSettings scanSettings =
-                        new ScanSettings.Builder().build();
-
-                bluetoothLeScanner.startScan(scanFilters, scanSettings, myLeScanCallback);*/
-
                 bluetoothLeScanner.startScan(myLeScanCallback);
                 isScanning = true;
                 startScanning();
@@ -415,8 +402,6 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder = new ViewHolder();
                 viewHolder.deviceName = (TextView) view.findViewById(R.id.deviceNameTxtV);
                 viewHolder.deviceAddress = (TextView) view.findViewById(R.id.deviceAddressTxtV);
-
-                // TODO insert an icon into the 'connect' button instead of the text
                 viewHolder.connect_btn = (Button) view.findViewById(R.id.connect_button);
                 view.setTag(viewHolder);
             } else {
@@ -434,12 +419,15 @@ public class LeScanActivity extends AppCompatActivity {
             viewHolder.connect_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //TODO connecting to the selected device onClick of 'connect' button
 
-                    Toast.makeText(LeScanActivity.this, "Device address: " + device.getAddress(),
-                            Toast.LENGTH_SHORT).show();
+                    // connecting to the selected device onClick of 'connect' button
+                    if(device.getAddress().equals(GattAttributesSample.DEVICE_ADDRESS)) {
 
-
+                        Intent showDeviceCharacteristics = new Intent();
+                        showDeviceCharacteristics.setClass(LeScanActivity.this, LeConnectedDeviceActivity.class);
+                        showDeviceCharacteristics.putExtra("deviceAddress", GattAttributesSample.DEVICE_ADDRESS);
+                        startActivity(showDeviceCharacteristics);
+                    }
                 }
             });
 
@@ -603,8 +591,7 @@ public class LeScanActivity extends AppCompatActivity {
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
+                            // requesting to enable Bluetooth
                             status.startResolutionForResult(LeScanActivity.this, REQUEST_ENABLE_LS);
 
                         } catch (IntentSender.SendIntentException e) {

@@ -14,7 +14,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.List;
 import java.util.UUID;
@@ -70,8 +69,7 @@ public class BluetoothLowEnergyService extends Service {
             } else if (newState == STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
-                /*Toast.makeText(BluetoothLowEnergyService.this, "Disconnected from GATT server.",
-                        Toast.LENGTH_SHORT).show();*/
+                Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
             }
         }
@@ -81,8 +79,7 @@ public class BluetoothLowEnergyService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
             } else {
-                /*Toast.makeText(BluetoothLowEnergyService.this, "The method 'onServicesDiscovered' received: " + status,
-                        Toast.LENGTH_SHORT).show();*/
+                Log.d(TAG, "The method 'onServicesDiscovered' received: " + status);
             }
         }
 
@@ -114,8 +111,16 @@ public class BluetoothLowEnergyService extends Service {
 
         final Intent intent = new Intent(action);
 
-       /* Toast.makeText(BluetoothLowEnergyService.this, "Broadcasting characteristic update " + characteristic.getUuid(),
-                Toast.LENGTH_SHORT).show();*/
+
+        /*// For all other profiles, writes the data formatted in HEX.
+        final byte[] data = characteristic.getValue();
+        if (data != null && data.length > 0) {
+            final StringBuilder stringBuilder = new StringBuilder(data.length);
+            for(byte byteChar : data)
+                stringBuilder.append(String.format("%02X ", byteChar));
+            intent.putExtra(EXTRA_DATA, new String(data) + "\n" +
+                    stringBuilder.toString());*/
+
 
         final byte[] data = characteristic.getValue();
         if (data != null && data.length > 0) {
@@ -152,16 +157,14 @@ public class BluetoothLowEnergyService extends Service {
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {
-                /*Toast.makeText(BluetoothLowEnergyService.this, "BluetoothManager initialization failed.",
-                        Toast.LENGTH_SHORT).show();*/
+                Log.d(TAG, "BluetoothManager initialization failed");
                 return false;
             }
         }
 
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "BluetoothAdapter initialization failed.",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "BluetoothAdapter initialization failed");
             return false;
         }
 
@@ -173,16 +176,15 @@ public class BluetoothLowEnergyService extends Service {
     // result is returned asynchronously through BluetoothGattCallback in onConnectionStateChange()
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "Unspecified address or uninitialized BluetoothAdapter.",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "Unspecified address or uninitialized BluetoothAdapter");
             return false;
         }
 
         // Trying to reconnect to previously connected device
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "Trying to use an existing mBluetoothGatt for connection.",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+
             if (mBluetoothGatt.connect()) {
                 mConnectionState = STATE_CONNECTING;
                 return true;
@@ -193,15 +195,13 @@ public class BluetoothLowEnergyService extends Service {
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "Device not found.  Unable to connect",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "Device not found.  Unable to connect");
             return false;
         }
 
-        // directly connecting to the device, therefore 'autoConnect' is set to false
+        // directly connecting to the Gatt server of device, therefore 'autoConnect' is set to false
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-        /*Toast.makeText(BluetoothLowEnergyService.this, "Trying to create a new connection",
-                Toast.LENGTH_SHORT).show();*/
+        Log.d(TAG, "Trying to create a new connection");
 
         mBluetoothDeviceAddress = address;
         mConnectionState = STATE_CONNECTING;
@@ -212,8 +212,7 @@ public class BluetoothLowEnergyService extends Service {
     // the result is reported via BluetoothGattCallback in onConnectionStateChange()
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "BluetoothAdapter is not initialized",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "BluetoothAdapter is not initialized");
             return;
         }
         mBluetoothGatt.disconnect();
@@ -232,8 +231,7 @@ public class BluetoothLowEnergyService extends Service {
     // the result is asynchronously returned through BluetoothGattCallback in onCharacteristicRead()
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "BluetoothAdapter is not initialized",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "BluetoothAdapter is not initialized");
             return;
         }
         mBluetoothGatt.readCharacteristic(characteristic);
@@ -243,8 +241,7 @@ public class BluetoothLowEnergyService extends Service {
     public void enableCharacteristicNotification(BluetoothGattCharacteristic characteristic) {
 
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            /*Toast.makeText(BluetoothLowEnergyService.this, "BluetoothAdapter is not initialized",
-                    Toast.LENGTH_SHORT).show();*/
+            Log.d(TAG, "BluetoothAdapter is not initialized");
             return;
         }
 

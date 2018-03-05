@@ -29,6 +29,9 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
 
+    private Runnable mTimer1;
+    private Runnable mTimer2;
+
     ExpandableListAdapter listAdapter;
     ExpandableListView expListView;
     List<String> servicesList;

@@ -18,5 +18,6 @@
     <string name="service_name">Service name</string>
     <string name="connect_service">Connect service</string>
     <string name="device_status">Device status</string>
+    <string name="attribute_item">TextView with attribute</string>
 
 </resources>

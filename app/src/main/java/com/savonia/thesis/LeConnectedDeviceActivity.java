@@ -208,7 +208,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                             mBluetoothLEService.readCharacteristic(mNotifyCharacteristic);
                         }
                         if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                            mBluetoothLEService.enableCharacteristicNotification(mNotifyCharacteristic);
+                            mBluetoothLEService.enableCharacteristicNotification(mNotifyCharacteristic, true);
                         }
 
                         return;

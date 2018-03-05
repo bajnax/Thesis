@@ -421,13 +421,13 @@ public class LeScanActivity extends AppCompatActivity {
                 public void onClick(View v) {
 
                     // connecting to the selected device onClick of 'connect' button
-                    if(device.getAddress().equals(GattAttributesSample.DEVICE_ADDRESS)) {
+                    //if(device.getAddress().equals(GattAttributesSample.DEVICE_ADDRESS)) {
 
                         Intent showDeviceCharacteristics = new Intent();
                         showDeviceCharacteristics.setClass(LeScanActivity.this, LeConnectedDeviceActivity.class);
                         showDeviceCharacteristics.putExtra("deviceAddress", GattAttributesSample.DEVICE_ADDRESS);
                         startActivity(showDeviceCharacteristics);
-                    }
+                    //}
                 }
             });
 

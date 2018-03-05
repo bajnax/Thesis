@@ -238,24 +238,28 @@ public class BluetoothLowEnergyService extends Service {
     }
 
     // enabling notification for the characteristic with sensors' data
-    public void enableCharacteristicNotification(BluetoothGattCharacteristic characteristic) {
+    public void enableCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
 
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.d(TAG, "BluetoothAdapter is not initialized");
             return;
         }
 
-        mBluetoothGatt.setCharacteristicNotification(characteristic, true);
-        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mBluetoothGatt.writeDescriptor(descriptor);
+        mBluetoothGatt.setCharacteristicNotification(characteristic, enable);
+
+        if(enable) {
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }
 
     }
 
     // when gattServices are discovered, this method
     // retrieves a list of the services, which are available on the device
     public List<BluetoothGattService> getSupportedGattServices() {
-        if (mBluetoothGatt == null) return null;
+        if (mBluetoothGatt == null)
+            return null;
 
         return mBluetoothGatt.getServices();
     }

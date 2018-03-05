@@ -34,8 +34,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     List<String> servicesList;
     HashMap<String, List<String>> characteristicsList;
     //TODO: change layout
-    Button connectService;
-    TextView serviceName;
     TextView deviceStatus;
 
     private BluetoothGattCharacteristic mNotifyCharacteristic;
@@ -115,12 +113,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         Toast.makeText(LeConnectedDeviceActivity.this, "Device address: " + deviceAddress,
                 Toast.LENGTH_SHORT).show();
 
-        if(deviceAddress == null || !deviceAddress.equals(GattAttributesSample.DEVICE_ADDRESS)) {
+        // TODO: set visibility  for the graphs creation button only for the BLEshield
+        if(deviceAddress == null) { // || !deviceAddress.equals(GattAttributesSample.DEVICE_ADDRESS)) {
             finish();
         }
-
-        serviceName = (TextView) findViewById(R.id.serviceName);
-        connectService = (Button) findViewById(R.id.connectService);
         deviceStatus = (TextView) findViewById(R.id.deviceStatus);
 
         Intent gattServiceIntent = new Intent(LeConnectedDeviceActivity.this, BluetoothLowEnergyService.class);
@@ -189,6 +185,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             return;
         String characteristicUuid = null;
         String serviceUuid = "unknown service";
+        String serviceName = "unknown service";
         String characteristicNameString = "unknown characteristic";
         servicesList = new ArrayList<String>();
         characteristicsList = new HashMap<String, List<String>>();
@@ -197,24 +194,34 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         for (BluetoothGattService currentGattService : gattServices) {
 
-            // TODO: refine this part
-            serviceUuid = currentGattService.getUuid().toString();
             // searching through characteristics of the service with sensors' data
             if (currentGattService != null) {
-                servicesList.add(serviceUuid);
+                serviceUuid = currentGattService.getUuid().toString();
+                serviceName = GattAttributesSample.getName(serviceUuid);
+
+                if(serviceName != null)
+                    servicesList.add(serviceName + ", " + serviceUuid);
+                else
+                    servicesList.add(serviceUuid);
+
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         currentGattService.getCharacteristics();
                 List<String> characteristicsNamesList = new ArrayList<String>();
 
                 for (BluetoothGattCharacteristic currentGattCharacteristic : gattCharacteristics) {
 
-                    characteristicUuid = currentGattCharacteristic.getUuid().toString();
-                    characteristicNameString = GattAttributesSample.getName(characteristicUuid);
-
-                    // reading and enabling notification for the characteristics with the sensors' data
+                    // reading characteristics
                     if (currentGattCharacteristic != null) {
-                        characteristicsNamesList.add(characteristicNameString + ", " + characteristicUuid);
 
+                        characteristicUuid = currentGattCharacteristic.getUuid().toString();
+                        characteristicNameString = GattAttributesSample.getName(characteristicUuid);
+
+                        if(characteristicNameString != null)
+                            characteristicsNamesList.add(characteristicNameString + ", " + characteristicUuid);
+                        else
+                            characteristicsNamesList.add(characteristicUuid);
+
+                        // enabling notification for the characteristics with the sensors' data
                         if(serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)
                                 && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {
                             mNotifyCharacteristic = currentGattCharacteristic;

@@ -14,9 +14,13 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class LeConnectedDeviceActivity extends AppCompatActivity {
@@ -25,6 +29,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
 
+    ExpandableListAdapter listAdapter;
+    ExpandableListView expListView;
+    List<String> servicesList;
+    HashMap<String, List<String>> characteristicsList;
     //TODO: change layout
     Button connectService;
     TextView serviceName;
@@ -96,6 +104,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_connected_device);
 
+        expListView = (ExpandableListView) findViewById(R.id.expandableListView);
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
@@ -181,41 +190,58 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         String characteristicUuid = null;
         String serviceUuid = "unknown service";
         String characteristicNameString = "unknown characteristic";
+        servicesList = new ArrayList<String>();
+        characteristicsList = new HashMap<String, List<String>>();
+
+        int serviceNumber = 0;
 
         for (BluetoothGattService currentGattService : gattServices) {
 
             // TODO: refine this part
             serviceUuid = currentGattService.getUuid().toString();
-
             // searching through characteristics of the service with sensors' data
-            if (serviceUuid != null && serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)) {
+            if (currentGattService != null) {
+                servicesList.add(serviceUuid);
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         currentGattService.getCharacteristics();
+                List<String> characteristicsNamesList = new ArrayList<String>();
 
                 for (BluetoothGattCharacteristic currentGattCharacteristic : gattCharacteristics) {
+
                     characteristicUuid = currentGattCharacteristic.getUuid().toString();
                     characteristicNameString = GattAttributesSample.getName(characteristicUuid);
 
                     // reading and enabling notification for the characteristics with the sensors' data
-                    if (characteristicNameString != null && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {
-                        serviceName.setText(characteristicNameString);
-                        mNotifyCharacteristic = currentGattCharacteristic;
+                    if (currentGattCharacteristic != null) {
+                        characteristicsNamesList.add(characteristicNameString + ", " + characteristicUuid);
 
-                        // setting notification for the current characteristic
-                        // to broadcast changes automatically
-                        final int characteristicProperties = mNotifyCharacteristic.getProperties();
-                        if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                            mBluetoothLEService.readCharacteristic(mNotifyCharacteristic);
+                        if(serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)
+                                && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {
+                            mNotifyCharacteristic = currentGattCharacteristic;
+                            // setting notification for the current characteristic
+                            // to broadcast changes automatically
+                            final int characteristicProperties = mNotifyCharacteristic.getProperties();
+                            if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                                mBluetoothLEService.readCharacteristic(mNotifyCharacteristic);
+                            }
+                            if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                                mBluetoothLEService.enableCharacteristicNotification(mNotifyCharacteristic, true);
+                            }
                         }
-                        if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                            mBluetoothLEService.enableCharacteristicNotification(mNotifyCharacteristic, true);
-                        }
-
-                        return;
                     }
                 }
+
+                characteristicsList.put(servicesList.get(serviceNumber), characteristicsNamesList);
+                serviceNumber++;
+
             }
         }
+
+        listAdapter = new ExpandableAttributesAdapter(this, servicesList, characteristicsList);
+
+        // setting list adapter
+        expListView.setAdapter(listAdapter);
+
     }
 
 }

@@ -152,10 +152,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         if( expListView.getVisibility() == View.VISIBLE ) {
             expListView.setVisibility(View.GONE);
             sensorsGraph.setVisibility(View.VISIBLE);
+            graphSetter.setText(R.string.hide_graph);
         }
         else {
             expListView.setVisibility(View.VISIBLE);
             sensorsGraph.setVisibility(View.GONE);
+            graphSetter.setText(R.string.show_graph);
         }
     }
 

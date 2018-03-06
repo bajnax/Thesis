@@ -13,11 +13,14 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.jjoe64.graphview.GraphView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,11 +36,13 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private Runnable mTimer2;
 
     ExpandableListAdapter listAdapter;
-    ExpandableListView expListView;
     List<String> servicesList;
     HashMap<String, List<String>> characteristicsList;
     //TODO: change layout
     TextView deviceStatus;
+    Button graphSetter;
+    ExpandableListView expListView;
+    GraphView sensorsGraph;
 
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     private boolean mConnected = false;
@@ -81,6 +86,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
                 updateConnectionState("Disconnected");
+
+                // remove listView and Graph if connection is lost
+                hideLayoutViews();
+
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 displayGattServices(mBluetoothLEService.getSupportedGattServices());
             } else if (BluetoothLowEnergyService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -105,9 +114,13 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_connected_device);
 
+        sensorsGraph = (GraphView) findViewById(R.id.graph);
+        graphSetter = (Button) findViewById(R.id.graphSetter);
         expListView = (ExpandableListView) findViewById(R.id.expandableListView);
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
+
+        if(bluetoothManager != null)
+            mBluetoothAdapter = bluetoothManager.getAdapter();
 
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
@@ -116,8 +129,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         Toast.makeText(LeConnectedDeviceActivity.this, "Device address: " + deviceAddress,
                 Toast.LENGTH_SHORT).show();
 
-        // TODO: set visibility  for the graphs creation button only for the BLEshield
-        if(deviceAddress == null) { // || !deviceAddress.equals(GattAttributesSample.DEVICE_ADDRESS)) {
+        if(deviceAddress == null) {
             finish();
         }
         deviceStatus = (TextView) findViewById(R.id.deviceStatus);
@@ -125,6 +137,32 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         Intent gattServiceIntent = new Intent(LeConnectedDeviceActivity.this, BluetoothLowEnergyService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
+        sensorsGraph.setVisibility(View.GONE);
+        graphSetter.setVisibility(View.INVISIBLE);
+        graphSetter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                swapLayoutViews();
+            }
+        });
+
+    }
+
+    private void swapLayoutViews() {
+        if( expListView.getVisibility() == View.VISIBLE ) {
+            expListView.setVisibility(View.GONE);
+            sensorsGraph.setVisibility(View.VISIBLE);
+        }
+        else {
+            expListView.setVisibility(View.VISIBLE);
+            sensorsGraph.setVisibility(View.GONE);
+        }
+    }
+
+    private void hideLayoutViews() {
+        expListView.setVisibility(View.GONE);
+        sensorsGraph.setVisibility(View.GONE);
+        graphSetter.setVisibility(View.INVISIBLE);
     }
 
 
@@ -178,6 +216,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     private void displaySensorsData(String data) {
         if (data != null) {
+
+            // If the app is receiving data, then it can be shown on a graph
+            if(graphSetter.getVisibility() == View.INVISIBLE)
+                graphSetter.setVisibility(View.VISIBLE);
+
             Toast.makeText(LeConnectedDeviceActivity.this, "Broadcasted data: " + data,
                     Toast.LENGTH_SHORT).show();
         }
@@ -251,7 +294,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         // setting list adapter
         expListView.setAdapter(listAdapter);
-
     }
 
 }

@@ -19,5 +19,7 @@
     <string name="connect_service">Connect service</string>
     <string name="device_status">Device status</string>
     <string name="attribute_item">TextView with attribute</string>
+    <string name="show_graph">Show Graph</string>
+    <string name="hide_graph">Hide Graph</string>
 
 </resources>

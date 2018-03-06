@@ -19,25 +19,25 @@
     <ExpandableListView
         android:id="@+id/expandableListView"
         android:layout_width="0dp"
-        android:layout_height="467dp"
-        android:layout_marginBottom="8dp"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/graph"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/deviceStatus"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
         android:id="@+id/graphSetter"
-        android:layout_width="wrap_content"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="108dp"
         android:layout_height="51dp"
         android:layout_marginEnd="32dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
+        android:background="@color/colorPrimary"
         android:text="@string/show_graph"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.859"
@@ -46,14 +46,15 @@
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graph"
-        android:layout_width="366dp"
-        android:layout_height="464dp"
-        android:layout_marginBottom="8dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="20dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/deviceStatus" />
+        app:layout_constraintTop_toBottomOf="@+id/deviceStatus"
+        app:layout_constraintVertical_bias="0.0" />
 </android.support.constraint.ConstraintLayout>

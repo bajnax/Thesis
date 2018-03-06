@@ -44,9 +44,9 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
         final String childText = (String) getChild(groupPosition, childPosition);
 
         if (convertView == null) {
-            LayoutInflater infalInflater = (LayoutInflater) this.context
+            LayoutInflater lInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = infalInflater.inflate(R.layout.attribute_item, null);
+            convertView = lInflater.inflate(R.layout.attribute_item, null);
         }
 
         TextView characteristicName = (TextView) convertView
@@ -82,9 +82,9 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
                              View convertView, ViewGroup parent) {
         String headerTitle = (String) getGroup(groupPosition);
         if (convertView == null) {
-            LayoutInflater infalInflater = (LayoutInflater) this.context
+            LayoutInflater lInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = infalInflater.inflate(R.layout.attribute_item, null);
+            convertView = lInflater.inflate(R.layout.attribute_item, null);
         }
 
         TextView serviceName = (TextView) convertView

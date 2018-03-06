@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/deviceAddressTxtV"
-        android:layout_gravity="right"
+        android:layout_gravity="end"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:text="@string/connect_btn_txt"/>

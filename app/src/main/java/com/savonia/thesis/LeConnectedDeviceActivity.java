@@ -13,7 +13,11 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
@@ -35,14 +39,16 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private Runnable mTimer1;
     private Runnable mTimer2;
 
-    ExpandableListAdapter listAdapter;
-    List<String> servicesList;
-    HashMap<String, List<String>> characteristicsList;
+    private ExpandableListAdapter listAdapter;
+    private List<String> servicesList;
+    private HashMap<String, List<String>> characteristicsList;
+
     //TODO: change layout
-    TextView deviceStatus;
-    Button graphSetter;
-    ExpandableListView expListView;
-    GraphView sensorsGraph;
+    private TextView deviceStatus;
+    private Button graphSetter;
+    private ExpandableListView expListView;
+    private GraphView sensorsGraph;
+    private Toolbar toolBar;
 
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     private boolean mConnected = false;
@@ -114,6 +120,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_connected_device);
 
+        toolBar = (Toolbar) findViewById(R.id.tool_bar);
+        setSupportActionBar(toolBar);
         sensorsGraph = (GraphView) findViewById(R.id.graph);
         graphSetter = (Button) findViewById(R.id.graphSetter);
         expListView = (ExpandableListView) findViewById(R.id.expandableListView);
@@ -137,7 +145,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         Intent gattServiceIntent = new Intent(LeConnectedDeviceActivity.this, BluetoothLowEnergyService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        sensorsGraph.setVisibility(View.GONE);
+        //sensorsGraph.setVisibility(View.GONE);
+        sensorsGraph.setVisibility(View.INVISIBLE);
         graphSetter.setVisibility(View.INVISIBLE);
         graphSetter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,16 +157,65 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     }
 
+
+    // TODO: create toolbar and associate dropdown menu items with graph, cloud connection and etc..
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu
+        getMenuInflater().inflate(R.menu.connected_device_menu, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        //menu.findItem(R.id.action_refresh).setVisible(true);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        /*switch (item.getItemId()) {
+            case R.id.action_refresh: {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLeDeviceListAdapter.clear();
+                        mLeDeviceListAdapter.notifyDataSetChanged();
+                    }
+                });
+                scanLeDevice(true);
+
+                return true;
+            }
+            case R.id.action_pause_scanning: {
+                if(isScanning)
+                    scanLeDevice(false);
+
+                return true;
+            }
+            default:
+                return super.onOptionsItemSelected(item);
+        }*/
+        return false;
+
+    }
+
+
     private void swapLayoutViews() {
         if( expListView.getVisibility() == View.VISIBLE ) {
+            slideToLeft(expListView);
+            slideFromRight(sensorsGraph);
+            graphSetter.setText(R.string.hide_graph);
             expListView.setVisibility(View.GONE);
             sensorsGraph.setVisibility(View.VISIBLE);
-            graphSetter.setText(R.string.hide_graph);
         }
         else {
-            expListView.setVisibility(View.VISIBLE);
-            sensorsGraph.setVisibility(View.GONE);
+            slideToLeft(sensorsGraph);
+            slideFromRight(expListView);
             graphSetter.setText(R.string.show_graph);
+            sensorsGraph.setVisibility(View.GONE);
+            expListView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -166,6 +224,33 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         sensorsGraph.setVisibility(View.GONE);
         graphSetter.setVisibility(View.INVISIBLE);
     }
+
+
+    public void slideToLeft(View view){
+        TranslateAnimation animate = new TranslateAnimation(0,-view.getWidth()*2,0,0);
+        animate.setDuration(500);
+        animate.setFillAfter(true);
+        view.startAnimation(animate);
+
+/*        if(view.getVisibility() == View.VISIBLE)
+            view.setVisibility(View.GONE);
+        else
+            view.setVisibility(View.VISIBLE);*/
+    }
+
+    public void slideFromRight(View view) {
+        TranslateAnimation animate = new TranslateAnimation(view.getWidth(), 0,0,0);
+        animate.setDuration(500);
+        animate.setFillAfter(true);
+        view.startAnimation(animate);
+
+        /*if(view.getVisibility() == View.GONE)
+            view.setVisibility(View.VISIBLE);
+        else
+            view.setVisibility(View.GONE);*/
+    }
+
+
 
 
     @Override
@@ -208,14 +293,17 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
 
     private void updateConnectionState(final String status) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                deviceStatus.setText(status);
-            }
-        });
+        deviceStatus.setText(status);
     }
 
+
+    // TODO: send data to the cloud
+
+
+    // TODO: receive records from the cloud
+
+
+    // TODO: fill the graph with sensors' data
     private void displaySensorsData(String data) {
         if (data != null) {
 

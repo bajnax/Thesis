@@ -19,6 +19,7 @@ import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MarginLayoutParamsCompat;
@@ -60,7 +61,9 @@ public class LeScanActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_ENABLE_LS = 3;
     private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
+    private final static long SCAN_PERIOD = 5000;
 
+    private Handler mHandler;
     private BluetoothAdapter mBluetoothAdapter;
     private Button lookUp;
     private ProgressBar spinner;
@@ -88,6 +91,7 @@ public class LeScanActivity extends AppCompatActivity {
         devicesList = (ListView) findViewById(R.id.devices_list);
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
+        mHandler = new Handler();
 
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         devicesList.setAdapter(mLeDeviceListAdapter);
@@ -271,8 +275,18 @@ public class LeScanActivity extends AppCompatActivity {
         if (isAccessFineLocationAllowed() && mBluetoothAdapter.isEnabled() && isLocationEnabled()) {
 
             if (enable) {
-                // the user should stop scanning manually
-                // or pause the app
+
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isScanning) {
+                            isScanning = false;
+                            bluetoothLeScanner.stopScan(myLeScanCallback);
+                            stopScanning();
+                        }
+                    }
+                }, SCAN_PERIOD);
+
 
                 bluetoothLeScanner.startScan(myLeScanCallback);
                 isScanning = true;

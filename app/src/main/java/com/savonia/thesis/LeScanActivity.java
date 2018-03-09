@@ -1,6 +1,7 @@
 package com.savonia.thesis;
 
 import android.Manifest;
+import android.animation.LayoutTransition;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -22,8 +23,6 @@ import android.location.LocationManager;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.MarginLayoutParamsCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -51,8 +50,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +58,7 @@ public class LeScanActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_ENABLE_LS = 3;
     private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
-    private final static long SCAN_PERIOD = 5000;
+    private final static long SCAN_PERIOD = 3000;
 
     private Handler mHandler;
     private BluetoothAdapter mBluetoothAdapter;
@@ -92,6 +89,11 @@ public class LeScanActivity extends AppCompatActivity {
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
         mHandler = new Handler();
+
+
+        // Animating layout changes
+        ((ViewGroup) findViewById(R.id.le_scan_id)).getLayoutTransition()
+                .enableTransitionType(LayoutTransition.CHANGING);
 
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         devicesList.setAdapter(mLeDeviceListAdapter);
@@ -310,7 +312,7 @@ public class LeScanActivity extends AppCompatActivity {
                     enableLocation();
 
             } else {
-                // if location or was disabled during scanning
+                // if location was disabled during scanning
                 if(mBluetoothAdapter.isEnabled())
                     bluetoothLeScanner.stopScan(myLeScanCallback);
 

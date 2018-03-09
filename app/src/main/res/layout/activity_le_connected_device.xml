@@ -37,16 +37,13 @@
     <Button
         android:id="@+id/graphSetter"
         style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="108dp"
-        android:layout_height="51dp"
+        android:layout_width="103dp"
+        android:layout_height="38dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:background="@color/colorPrimary"
         android:text="@string/show_graph"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.733"
-        app:layout_constraintStart_toEndOf="@+id/deviceStatus"
         app:layout_constraintTop_toBottomOf="@+id/tool_bar" />
 
     <com.jjoe64.graphview.GraphView

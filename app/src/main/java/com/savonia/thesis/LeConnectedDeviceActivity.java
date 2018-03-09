@@ -1,5 +1,6 @@
 package com.savonia.thesis;
 
+import android.animation.LayoutTransition;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -17,6 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ExpandableListAdapter;
@@ -120,6 +122,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_connected_device);
 
+/*        // animating layout changes
+        ((ViewGroup) findViewById(R.id.le_connected_device_id)).getLayoutTransition()
+                .enableTransitionType(LayoutTransition.CHANGING);*/
+
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
         sensorsGraph = (GraphView) findViewById(R.id.graph);
@@ -207,14 +213,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             slideToLeft(expListView);
             slideFromRight(sensorsGraph);
             graphSetter.setText(R.string.hide_graph);
-            expListView.setVisibility(View.GONE);
+            expListView.setVisibility(View.INVISIBLE);
             sensorsGraph.setVisibility(View.VISIBLE);
         }
         else {
             slideToLeft(sensorsGraph);
             slideFromRight(expListView);
             graphSetter.setText(R.string.show_graph);
-            sensorsGraph.setVisibility(View.GONE);
+            sensorsGraph.setVisibility(View.INVISIBLE);
             expListView.setVisibility(View.VISIBLE);
         }
     }
@@ -229,7 +235,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     public void slideToLeft(View view){
         TranslateAnimation animate = new TranslateAnimation(0,-view.getWidth()*2,0,0);
         animate.setDuration(500);
-        animate.setFillAfter(true);
+        //animate.setFillAfter(true);
         view.startAnimation(animate);
 
 /*        if(view.getVisibility() == View.VISIBLE)

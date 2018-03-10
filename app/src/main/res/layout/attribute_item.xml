@@ -11,6 +11,6 @@
         android:layout_alignParentTop="true"
         android:layout_marginBottom="5dp"
         android:layout_marginTop="5dp"
-        android:text="@string/attribute_item"
+        android:text="@string/unknown_characteristic"
         android:textColor="@color/colorPrimary" />
 </RelativeLayout>

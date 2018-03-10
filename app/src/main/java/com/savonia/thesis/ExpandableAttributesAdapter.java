@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -84,13 +85,15 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
         if (convertView == null) {
             LayoutInflater lInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = lInflater.inflate(R.layout.attribute_item, null);
+            convertView = lInflater.inflate(R.layout.services_item, null);
         }
 
         TextView serviceName = (TextView) convertView
-                .findViewById(R.id.attributeTextView);
+                .findViewById(R.id.serviceName);
         serviceName.setTypeface(null, Typeface.BOLD);
         serviceName.setText(headerTitle);
+        ImageView groupIndicator = convertView.findViewById(R.id.groupIndicator);
+        groupIndicator.setSelected(isExpanded);
 
         return convertView;
     }

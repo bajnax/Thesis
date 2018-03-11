@@ -11,6 +11,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,6 +26,7 @@ import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,13 +55,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private ExpandableListView expListView;
     private GraphView sensorsGraph;
     private Toolbar toolBar;
+    private ProgressBar spinner;
+    private TextView lookUpText;
 
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     private boolean mConnected = false;
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
-    // initializing BLEservice and attempting to connect to the device
+    // initializing BLE service and attempting to connect to the device
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
@@ -95,6 +101,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 mConnected = false;
                 updateConnectionState("Disconnected");
 
+                // TODO: reconnect and redraw the layout when BLE Shield disconnects
+
                 // remove listView and Graph if connection is lost
                 hideLayoutViews();
 
@@ -122,9 +130,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_connected_device);
 
-/*        // animating layout changes
-        ((ViewGroup) findViewById(R.id.le_connected_device_id)).getLayoutTransition()
-                .enableTransitionType(LayoutTransition.CHANGING);*/
+        deviceStatus = (TextView) findViewById(R.id.deviceStatus);
+
+        // spinner, its neighbouring textView, graph and connectivity to the SaMi cloud
+        // won't be shown if another device is connected
+        spinner = (ProgressBar) findViewById(R.id.spinner);
+        lookUpText = (TextView) findViewById(R.id.lookUpTextView);
+        spinner.setVisibility(View.GONE);
+        lookUpText.setVisibility(View.GONE);
 
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
@@ -146,12 +159,20 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         if(deviceAddress == null) {
             finish();
         }
-        deviceStatus = (TextView) findViewById(R.id.deviceStatus);
+
+        // setting up the progress bar, in case the BLE Shield is connected
+        if(deviceAddress.equals(GattAttributesSample.DEVICE_ADDRESS)) {
+            Drawable progressDrawable = spinner.getIndeterminateDrawable().mutate();
+            progressDrawable.setColorFilter(getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
+            spinner.setProgressDrawable(progressDrawable);
+            spinner.setVisibility(View.VISIBLE);
+            lookUpText.setVisibility(View.VISIBLE);
+        }
 
         Intent gattServiceIntent = new Intent(LeConnectedDeviceActivity.this, BluetoothLowEnergyService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        //sensorsGraph.setVisibility(View.GONE);
+        expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.INVISIBLE);
         graphSetter.setVisibility(View.INVISIBLE);
         graphSetter.setOnClickListener(new View.OnClickListener() {
@@ -229,19 +250,16 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
         graphSetter.setVisibility(View.INVISIBLE);
+        spinner.setVisibility(View.VISIBLE);
+        lookUpText.setVisibility(View.VISIBLE);
+        lookUpText.setText(R.string.connection_lost);
     }
 
 
     public void slideToLeft(View view){
         TranslateAnimation animate = new TranslateAnimation(0,-view.getWidth()*2,0,0);
         animate.setDuration(500);
-        //animate.setFillAfter(true);
         view.startAnimation(animate);
-
-/*        if(view.getVisibility() == View.VISIBLE)
-            view.setVisibility(View.GONE);
-        else
-            view.setVisibility(View.VISIBLE);*/
     }
 
     public void slideFromRight(View view) {
@@ -249,14 +267,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         animate.setDuration(500);
         animate.setFillAfter(true);
         view.startAnimation(animate);
-
-        /*if(view.getVisibility() == View.GONE)
-            view.setVisibility(View.VISIBLE);
-        else
-            view.setVisibility(View.GONE);*/
     }
-
-
 
 
     @Override
@@ -317,6 +328,9 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             if(graphSetter.getVisibility() == View.INVISIBLE)
                 graphSetter.setVisibility(View.VISIBLE);
 
+            spinner.setVisibility(View.GONE);
+            lookUpText.setVisibility(View.GONE);
+
             Toast.makeText(LeConnectedDeviceActivity.this, "Broadcasted data: " + data,
                     Toast.LENGTH_SHORT).show();
         }
@@ -333,6 +347,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         characteristicsList = new HashMap<String, List<String>>();
 
         int serviceNumber = 0;
+
+        // TODO: get proper names for services and characteristics
 
         for (BluetoothGattService currentGattService : gattServices) {
 
@@ -366,6 +382,9 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                         // enabling notification for the characteristics with the sensors' data
                         if(serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)
                                 && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {
+
+                            lookUpText.setText(R.string.waiting_notified_characteristic);
+
                             mNotifyCharacteristic = currentGattCharacteristic;
                             // setting notification for the current characteristic
                             // to broadcast changes automatically
@@ -390,6 +409,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         // setting list adapter
         expListView.setAdapter(listAdapter);
+        expListView.setVisibility(View.VISIBLE);
     }
 
 }

@@ -9,18 +9,22 @@
         android:id="@+id/serviceName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/groupIndicator"
         android:text="@string/unknown_service"
+        android:textStyle="bold"
         android:textColor="@color/colorPrimary" />
 
     <ImageView
         android:id="@+id/groupIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="5dp"
         android:layout_alignParentEnd="true"
         android:layout_alignTop="@+id/serviceName"
+        android:layout_gravity="center_vertical"
         android:background="@drawable/group_indicator"
         android:contentDescription="@string/unknown_service"/>
 </RelativeLayout>

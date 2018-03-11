@@ -13,11 +13,10 @@
     <string name="device_name">Device Name</string>
     <string name="device_address">Device Address</string>
     <string name="unknown_device">Unknown Device</string>
-    <string name="scanning_status_active"><b>Scanning status: SCANNING</b></string>
-    <string name="scanning_status_inactive"><b>Scanning status: INACTIVE</b></string>
+    <string name="scanning_status_active">Scanning status: SCANNING</string>
+    <string name="scanning_status_inactive">Scanning status: INACTIVE</string>
     <string name="service_name">Service name</string>
     <string name="connect_service">Connect service</string>
-    <string name="device_status">Device status</string>
     <string name="show_graph">Show Graph</string>
     <string name="hide_graph">Hide Graph</string>
     <string name="action_settings">Settings</string>
@@ -25,5 +24,10 @@
     <string name="device_disconnected">DEVICE DISCONNECTED</string>
     <string name="unknown_service">Unknown service</string>
     <string name="unknown_characteristic">Unknown characteristic</string>
+    <string name="waiting_notified_characteristic">Retrieving sensor\'s data from the BLE device</string>
+    <string name="waiting_services">Retrieving services from the BLE device</string>
+    <string name="connection_lost">Lost connection with BLE device. Trying to reconnect..</string>
+    <string name="connectivity_status">Connection status</string>
+
 
 </resources>

@@ -2,10 +2,12 @@ package com.savonia.thesis;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.media.Image;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -81,30 +83,40 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded,
                              View convertView, ViewGroup parent) {
+
+        ViewHolder viewHolder;
         String headerTitle = (String) getGroup(groupPosition);
+
+        // implementing ViewHolder design pattern to increase performance
         if (convertView == null) {
             LayoutInflater lInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = lInflater.inflate(R.layout.services_item, null);
-        }
-
-        TextView serviceName = (TextView) convertView
-                .findViewById(R.id.serviceName);
-        serviceName.setTypeface(null, Typeface.BOLD);
-        serviceName.setText(headerTitle);
-        ImageView groupIndicator = convertView.findViewById(R.id.groupIndicator);
-        groupIndicator.setSelected(isExpanded);
+            viewHolder = new ViewHolder();
+            viewHolder.serviceName = (TextView) convertView.findViewById(R.id.serviceName);
+            viewHolder.groupIndicator = (ImageView) convertView.findViewById(R.id.groupIndicator);
+            viewHolder.serviceName.setText(headerTitle);
+            viewHolder.groupIndicator.setSelected(isExpanded);
+            convertView.setTag(viewHolder);
+        } else
+            viewHolder = (ViewHolder) convertView.getTag();
 
         return convertView;
     }
 
     @Override
     public boolean hasStableIds() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;
     }
+
+    class ViewHolder {
+        TextView serviceName;
+        ImageView groupIndicator;
+    }
 }
+

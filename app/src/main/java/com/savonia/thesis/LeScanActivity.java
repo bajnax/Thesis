@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.os.Handler;
@@ -411,6 +412,8 @@ public class LeScanActivity extends AppCompatActivity {
 
         @Override
         public View getView(int position, View view, ViewGroup viewGroup) {
+
+            // implementing ViewHolder design pattern to increase performance
             ViewHolder viewHolder;
 
             if (view == null) {

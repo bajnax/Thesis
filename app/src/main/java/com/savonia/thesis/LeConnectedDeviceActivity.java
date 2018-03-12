@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -141,7 +142,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
+
+        //setting width of the graph's vertical labels
         sensorsGraph = (GraphView) findViewById(R.id.graph);
+        sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(40);
+
         graphSetter = (Button) findViewById(R.id.graphSetter);
         expListView = (ExpandableListView) findViewById(R.id.expandableListView);
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);

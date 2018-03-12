@@ -2,8 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/showServices"
-        android:title="@string/show_services" />
-    <item android:id="@+id/drawGraph"
         android:title="@string/draw_graph" />
     <item android:id="@+id/showSami"
         android:title="@string/show_sami" />

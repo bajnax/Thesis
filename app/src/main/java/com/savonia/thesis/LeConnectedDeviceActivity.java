@@ -192,7 +192,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     }
 
 
-    // TODO: create toolbar and associate popup menu items with graph, cloud connection and etc..
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu
@@ -203,6 +202,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.menu_device_setting).setVisible(true);
+
         return true;
     }
 
@@ -226,18 +226,23 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         popup.getMenuInflater()
                 .inflate(R.menu.actions, popup.getMenu());
 
-        // TODO: associate popup menu items with methods
+        if(expListView.getVisibility() == View.VISIBLE)
+            popup.getMenu().findItem(R.id.showServices).setTitle(R.string.draw_graph);
+        else
+            popup.getMenu().findItem(R.id.showServices).setTitle(R.string.show_services);
+
 
         // registering popup with OnMenuItemClickListener
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.showServices:
-                        break;
-                    case R.id.drawGraph:
+                        swapLayoutViews();
                         break;
                     case R.id.showSami:
+                        // TODO: send data to SaMi cloud
                         break;
+                    // TODO: add 'refresh' option
                 }
                 return true;
             }
@@ -329,9 +334,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private void updateConnectionState(final String status) {
         deviceStatus.setText(status);
     }
-
-
-    // TODO: send data to the cloud
 
 
     // TODO: receive records from the cloud

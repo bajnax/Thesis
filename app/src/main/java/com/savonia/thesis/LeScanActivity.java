@@ -279,7 +279,9 @@ public class LeScanActivity extends AppCompatActivity {
 
             if (enable) {
 
-                mHandler.postDelayed(new Runnable() {
+                // the user can manually invoke a search for BLE devices
+
+               /* mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if(isScanning) {
@@ -288,7 +290,7 @@ public class LeScanActivity extends AppCompatActivity {
                             stopScanning();
                         }
                     }
-                }, SCAN_PERIOD);
+                }, SCAN_PERIOD);*/
 
 
                 bluetoothLeScanner.startScan(myLeScanCallback);
@@ -617,26 +619,4 @@ public class LeScanActivity extends AppCompatActivity {
             }
         });
     }
-
-
-    /*private class GattClientCallback extends BluetoothGattCallback {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            super.onConnectionStateChange(gatt, status, newState);
-            if (status == BluetoothGatt.GATT_FAILURE) {
-                disconnectGattServer();
-                return;
-            } else if (status != BluetoothGatt.GATT_SUCCESS) {
-                disconnectGattServer();
-                return;
-            }
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                mConnected = true;
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                disconnectGattServer();
-            }
-        }
-    }*/
-
-
 }

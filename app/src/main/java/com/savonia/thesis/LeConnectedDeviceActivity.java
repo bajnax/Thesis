@@ -173,8 +173,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
         expListView.setVisibility(View.GONE);
-        sensorsGraph.setVisibility(View.INVISIBLE);
-        graphSetter.setVisibility(View.INVISIBLE);
+        sensorsGraph.setVisibility(View.GONE);
+        graphSetter.setVisibility(View.GONE);
         graphSetter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -234,14 +234,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             slideToLeft(expListView);
             slideFromRight(sensorsGraph);
             graphSetter.setText(R.string.hide_graph);
-            expListView.setVisibility(View.INVISIBLE);
+            expListView.setVisibility(View.GONE);
             sensorsGraph.setVisibility(View.VISIBLE);
         }
         else {
             slideToLeft(sensorsGraph);
             slideFromRight(expListView);
             graphSetter.setText(R.string.show_graph);
-            sensorsGraph.setVisibility(View.INVISIBLE);
+            sensorsGraph.setVisibility(View.GONE);
             expListView.setVisibility(View.VISIBLE);
         }
     }
@@ -249,7 +249,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private void hideLayoutViews() {
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
-        graphSetter.setVisibility(View.INVISIBLE);
+        graphSetter.setVisibility(View.GONE);
         spinner.setVisibility(View.VISIBLE);
         lookUpText.setVisibility(View.VISIBLE);
         lookUpText.setText(R.string.connection_lost);
@@ -325,7 +325,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         if (data != null) {
 
             // If the app is receiving data, then it can be shown on a graph
-            if(graphSetter.getVisibility() == View.INVISIBLE)
+            if(graphSetter.getVisibility() == View.GONE)
                 graphSetter.setVisibility(View.VISIBLE);
 
             spinner.setVisibility(View.GONE);
@@ -358,7 +358,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 serviceName = GattAttributesSample.getName(serviceUuid);
 
                 if(serviceName != null)
-                    servicesList.add(serviceName + ", " + serviceUuid);
+                    servicesList.add(serviceUuid);//servicesList.add(serviceName + ", " + serviceUuid);
                 else
                     servicesList.add(serviceUuid);
 
@@ -375,7 +375,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                         characteristicNameString = GattAttributesSample.getName(characteristicUuid);
 
                         if(characteristicNameString != null)
-                            characteristicsNamesList.add(characteristicNameString + ", " + characteristicUuid);
+                            characteristicsNamesList.add(characteristicUuid); // characteristicsNamesList.add(characteristicNameString + ", " + characteristicUuid);
                         else
                             characteristicsNamesList.add(characteristicUuid);
 

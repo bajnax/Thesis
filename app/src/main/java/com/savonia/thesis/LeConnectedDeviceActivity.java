@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -190,7 +192,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     }
 
 
-    // TODO: create toolbar and associate dropdown menu items with graph, cloud connection and etc..
+    // TODO: create toolbar and associate popup menu items with graph, cloud connection and etc..
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu
@@ -198,41 +200,51 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         return true;
     }
 
-
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        //menu.findItem(R.id.action_refresh).setVisible(true);
+        menu.findItem(R.id.menu_device_setting).setVisible(true);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        /*switch (item.getItemId()) {
-            case R.id.action_refresh: {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mLeDeviceListAdapter.clear();
-                        mLeDeviceListAdapter.notifyDataSetChanged();
-                    }
-                });
-                scanLeDevice(true);
-
-                return true;
-            }
-            case R.id.action_pause_scanning: {
-                if(isScanning)
-                    scanLeDevice(false);
-
+        switch (item.getItemId()) {
+            case R.id.menu_device_setting: {
+                View menuItemView = findViewById(R.id.menu_device_setting);
+                showPopup(menuItemView);
                 return true;
             }
             default:
                 return super.onOptionsItemSelected(item);
-        }*/
-        return false;
-
+        }
     }
 
+
+    public void showPopup(View view) {
+        PopupMenu popup = new PopupMenu(this, view);
+
+        popup.getMenuInflater()
+                .inflate(R.menu.actions, popup.getMenu());
+
+        // TODO: associate popup menu items with methods
+
+        // registering popup with OnMenuItemClickListener
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.showServices:
+                        break;
+                    case R.id.drawGraph:
+                        break;
+                    case R.id.showSami:
+                        break;
+                }
+                return true;
+            }
+        });
+
+        popup.show();
+    }
 
     private void swapLayoutViews() {
         if( expListView.getVisibility() == View.VISIBLE ) {
@@ -363,7 +375,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 serviceName = GattAttributesSample.getName(serviceUuid);
 
                 if(serviceName != null)
-                    servicesList.add(serviceUuid);//servicesList.add(serviceName + ", " + serviceUuid);
+                    servicesList.add(serviceName);// + ", " + serviceUuid);
                 else
                     servicesList.add(serviceUuid);
 
@@ -380,7 +392,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                         characteristicNameString = GattAttributesSample.getName(characteristicUuid);
 
                         if(characteristicNameString != null)
-                            characteristicsNamesList.add(characteristicUuid); // characteristicsNamesList.add(characteristicNameString + ", " + characteristicUuid);
+                            characteristicsNamesList.add(characteristicNameString);// + ", " + characteristicUuid);
                         else
                             characteristicsNamesList.add(characteristicUuid);
 

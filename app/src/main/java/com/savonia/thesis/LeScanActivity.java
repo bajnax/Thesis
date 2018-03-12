@@ -542,8 +542,6 @@ public class LeScanActivity extends AppCompatActivity {
         }
     }
 
-    // TODO: request internet permission
-
 
     public boolean isLocationEnabled() {
         if(isAccessFineLocationAllowed()) {

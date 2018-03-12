@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Thesis</string>
-    <string name="look_up_text_view_initial">Press \'Scan\' to search for available device</string>
+    <string name="look_up_text_view_initial">Press \'Scan\' to search for available devices</string>
     <string name="look_up_text_view_scanning_failed">No BLE devices found. Press \'Scan\' to search again</string>
     <string name="look_up_text_view_scanning">Searching for available devices</string>
 
@@ -27,11 +27,11 @@
     <string name="waiting_notified_characteristic">Retrieving sensor\'s data from the BLE device</string>
     <string name="waiting_services">Retrieving services from the BLE device</string>
     <string name="connection_lost">Lost connection with BLE device. Trying to reconnect..</string>
-    <string name="connectivity_status">Connection status</string>
+    <string name="connectivity_status">Connecting..</string>
     <string name="settings">Settings</string>
 
     <string name="show_services">Display GATTs</string>
-    <string name="draw_graph">Display graph</string>
+    <string name="draw_graph">Display a LiveData graph</string>
     <string name="show_sami">Send data to SaMi cloud</string>
 
 

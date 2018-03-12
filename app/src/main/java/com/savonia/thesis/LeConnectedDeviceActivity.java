@@ -45,16 +45,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     private BluetoothAdapter mBluetoothAdapter;
 
-    private Runnable mTimer1;
-    private Runnable mTimer2;
-
     private ExpandableListAdapter listAdapter;
     private List<String> servicesList;
     private HashMap<String, List<String>> characteristicsList;
 
     //TODO: change layout
     private TextView deviceStatus;
-    private Button graphSetter;
     private ExpandableListView expListView;
     private GraphView sensorsGraph;
     private Toolbar toolBar;
@@ -62,7 +58,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private TextView lookUpText;
 
     private BluetoothGattCharacteristic mNotifyCharacteristic;
-    private boolean mConnected = false;
+    private boolean isReceivingData = false;
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
@@ -97,21 +93,29 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLowEnergyService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnected = true;
                 updateConnectionState("Connected");
+                spinner.setVisibility(View.VISIBLE);
+                lookUpText.setVisibility(View.VISIBLE);
                 invalidateOptionsMenu();
             } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnected = false;
                 updateConnectionState("Disconnected");
+                isReceivingData = false;
+                spinner.setVisibility(View.VISIBLE);
+                lookUpText.setVisibility(View.VISIBLE);
+                invalidateOptionsMenu();
 
                 // TODO: reconnect and redraw the layout when BLE Shield disconnects
-
-                // remove listView and Graph if connection is lost
-                hideLayoutViews();
+                //hideLayoutViews();
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 displayGattServices(mBluetoothLEService.getSupportedGattServices());
             } else if (BluetoothLowEnergyService.ACTION_DATA_AVAILABLE.equals(action)) {
+
+                if(!isReceivingData) {
+                    isReceivingData = true;
+                    invalidateOptionsMenu();
+                }
+
                 displaySensorsData(intent.getStringExtra(BluetoothLowEnergyService.EXTRA_DATA));
             }
         }
@@ -149,7 +153,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         sensorsGraph = (GraphView) findViewById(R.id.graph);
         sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(40);
 
-        graphSetter = (Button) findViewById(R.id.graphSetter);
         expListView = (ExpandableListView) findViewById(R.id.expandableListView);
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
@@ -181,13 +184,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
-        graphSetter.setVisibility(View.GONE);
-        graphSetter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                swapLayoutViews();
-            }
-        });
 
     }
 
@@ -201,7 +197,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.menu_device_setting).setVisible(true);
+        if(isReceivingData)
+            menu.findItem(R.id.menu_device_setting).setVisible(true);
+        else
+            menu.findItem(R.id.menu_device_setting).setVisible(false);
 
         return true;
     }
@@ -255,14 +254,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         if( expListView.getVisibility() == View.VISIBLE ) {
             slideToLeft(expListView);
             slideFromRight(sensorsGraph);
-            graphSetter.setText(R.string.hide_graph);
             expListView.setVisibility(View.GONE);
             sensorsGraph.setVisibility(View.VISIBLE);
         }
         else {
             slideToLeft(sensorsGraph);
             slideFromRight(expListView);
-            graphSetter.setText(R.string.show_graph);
             sensorsGraph.setVisibility(View.GONE);
             expListView.setVisibility(View.VISIBLE);
         }
@@ -271,7 +268,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private void hideLayoutViews() {
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
-        graphSetter.setVisibility(View.GONE);
         spinner.setVisibility(View.VISIBLE);
         lookUpText.setVisibility(View.VISIBLE);
         lookUpText.setText(R.string.connection_lost);
@@ -336,17 +332,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     }
 
 
-    // TODO: receive records from the cloud
-
-
-    // TODO: fill the graph with sensors' data
+    // TODO: fill the graph with sensors' data via LiveData using Room
     private void displaySensorsData(String data) {
         if (data != null) {
 
             // If the app is receiving data, then it can be shown on a graph
-            if(graphSetter.getVisibility() == View.GONE)
-                graphSetter.setVisibility(View.VISIBLE);
-
             spinner.setVisibility(View.GONE);
             lookUpText.setVisibility(View.GONE);
 

@@ -31,7 +31,8 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".LeConnectedDeviceActivity"></activity>
+        <activity android:name=".LeConnectedDeviceActivity"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

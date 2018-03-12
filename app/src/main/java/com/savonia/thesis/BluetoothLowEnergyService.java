@@ -200,7 +200,7 @@ public class BluetoothLowEnergyService extends Service {
         }
 
         // directly connecting to the Gatt server of device, therefore 'autoConnect' is set to false
-        mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+        mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
         Log.d(TAG, "Trying to create a new connection");
 
         mBluetoothDeviceAddress = address;

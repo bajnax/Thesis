@@ -437,11 +437,9 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder.deviceName.setText(R.string.unknown_device);
             viewHolder.deviceAddress.setText(device.getAddress());
 
-            // TODO: refine onClickListener
             viewHolder.connect_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
                         Intent showDeviceCharacteristics = new Intent();
                         showDeviceCharacteristics.setClass(LeScanActivity.this, LeConnectedDeviceActivity.class);
                         showDeviceCharacteristics.putExtra("deviceAddress", GattAttributesSample.DEVICE_ADDRESS);

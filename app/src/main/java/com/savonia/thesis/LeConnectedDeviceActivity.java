@@ -104,9 +104,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 lookUpText.setVisibility(View.VISIBLE);
                 invalidateOptionsMenu();
 
-                // TODO: reconnect and redraw the layout when BLE Shield disconnects
-                //hideLayoutViews();
-
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 displayGattServices(mBluetoothLEService.getSupportedGattServices());
             } else if (BluetoothLowEnergyService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -149,8 +146,13 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
 
-        //setting width of the graph's vertical labels
+        //setting up the graph's vertical labels
         sensorsGraph = (GraphView) findViewById(R.id.graph);
+        sensorsGraph.setTitle("Current sensor\'s data");
+        sensorsGraph.setTitleColor(R.color.colorPrimaryDark);
+        sensorsGraph.getViewport().setScalableY(true);
+        sensorsGraph.getGridLabelRenderer().setVerticalAxisTitle("Value");
+        sensorsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
         sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(40);
 
         expListView = (ExpandableListView) findViewById(R.id.expandableListView);
@@ -158,6 +160,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         if(bluetoothManager != null)
             mBluetoothAdapter = bluetoothManager.getAdapter();
+        else
+            finish();
 
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
@@ -181,6 +185,18 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         Intent gattServiceIntent = new Intent(LeConnectedDeviceActivity.this, BluetoothLowEnergyService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        if (!mBluetoothAdapter.enable()) {
+            Intent bleIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(bleIntent, REQUEST_ENABLE_BT);
+        }
+        registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
+        if (mBluetoothLEService != null) {
+            final boolean result = mBluetoothLEService.connect(GattAttributesSample.DEVICE_ADDRESS);
+            Toast.makeText(LeConnectedDeviceActivity.this,
+                    "Connect request result: " + result, Toast.LENGTH_SHORT).show();
+        }
+
 
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
@@ -296,24 +312,25 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(intent, REQUEST_ENABLE_BT);
         }
-        registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
+        /*registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
         if (mBluetoothLEService != null) {
             final boolean result = mBluetoothLEService.connect(GattAttributesSample.DEVICE_ADDRESS);
             Toast.makeText(LeConnectedDeviceActivity.this,
                     "Connect request result: " + result, Toast.LENGTH_SHORT).show();
-        }
+        }*/
     }
 
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
+        //unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(mGattUpdateReceiver);
         unbindService(mServiceConnection);
         mBluetoothLEService = null;
     }

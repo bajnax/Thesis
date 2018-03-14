@@ -44,18 +44,22 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
     public View getChildView(int groupPosition, final int childPosition,
                              boolean isLastChild, View convertView, ViewGroup parent) {
 
+        ViewHolderChild viewHolderChild;
+
         final String childText = (String) getChild(groupPosition, childPosition);
 
         if (convertView == null) {
             LayoutInflater lInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = lInflater.inflate(R.layout.attribute_item, null);
-        }
+            viewHolderChild = new ViewHolderChild();
+            viewHolderChild.characteristicName = (TextView) convertView.findViewById(R.id.attributeTextView);
+            convertView.setTag(viewHolderChild);
+        } else
+            viewHolderChild = (ViewHolderChild) convertView.getTag();
 
-        TextView characteristicName = (TextView) convertView
-                .findViewById(R.id.attributeTextView);
+        viewHolderChild.characteristicName.setText(childText);
 
-        characteristicName.setText(childText);
         return convertView;
     }
 
@@ -84,23 +88,23 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
     public View getGroupView(int groupPosition, boolean isExpanded,
                              View convertView, ViewGroup parent) {
 
-        ViewHolder viewHolder;
+        ViewHolderGroup viewHolder;
         String headerTitle = (String) getGroup(groupPosition);
 
-        // implementing ViewHolder design pattern to increase performance
+        // implementing ViewHolderGroup design pattern to increase performance
         if (convertView == null) {
             LayoutInflater lInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = lInflater.inflate(R.layout.services_item, null);
-            viewHolder = new ViewHolder();
+            viewHolder = new ViewHolderGroup();
             viewHolder.serviceName = (TextView) convertView.findViewById(R.id.serviceName);
             viewHolder.groupIndicator = (ImageView) convertView.findViewById(R.id.groupIndicator);
-            viewHolder.serviceName.setText(headerTitle);
             viewHolder.groupIndicator.setSelected(isExpanded);
             convertView.setTag(viewHolder);
         } else
-            viewHolder = (ViewHolder) convertView.getTag();
+            viewHolder = (ViewHolderGroup) convertView.getTag();
 
+        viewHolder.serviceName.setText(headerTitle);
         return convertView;
     }
 
@@ -114,9 +118,13 @@ public class ExpandableAttributesAdapter extends BaseExpandableListAdapter {
         return true;
     }
 
-    class ViewHolder {
+    static class ViewHolderGroup {
         TextView serviceName;
         ImageView groupIndicator;
+    }
+
+    static class ViewHolderChild {
+        TextView characteristicName;
     }
 }
 

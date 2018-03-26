@@ -1,6 +1,8 @@
 package com.savonia.thesis;
 
 import android.animation.LayoutTransition;
+import android.app.ActivityManager;
+import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -42,6 +44,8 @@ import java.util.List;
 public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     private final static int REQUEST_ENABLE_BT = 1;
+    private final static String CONNECTION_STATE = "ConnectionEstablished";
+    private final static String RECEIVED_SERVICES = "ServicesReceived";
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -62,17 +66,36 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
+    // used to check if services had been already received
+    private boolean isServiceRunning = false;
+    private boolean hasReceivedServices = false;
+    private String deviceAddress;
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        // Save some data
+        savedInstanceState.putBoolean(CONNECTION_STATE, isServiceRunning);
+        savedInstanceState.putBoolean(RECEIVED_SERVICES, hasReceivedServices);
+
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+
     // initializing BLE service and attempting to connect to the device
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
+            // receiving a singleton entity of the BluetoothLowEnergyService from via IBinder
             mBluetoothLEService = ((BluetoothLowEnergyService.LocalBinder) service).getService();
             if (!mBluetoothLEService.initialize()) {
                 Toast.makeText(LeConnectedDeviceActivity.this,
                         "Unable to initialize Bluetooth", Toast.LENGTH_SHORT).show();
                 finish();
             }
-            mBluetoothLEService.connect((GattAttributesSample.DEVICE_ADDRESS));
+
+            if(!isServiceRunning)
+                mBluetoothLEService.connect(deviceAddress);
         }
 
         @Override
@@ -94,6 +117,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLowEnergyService.ACTION_GATT_CONNECTED.equals(action)) {
                 updateConnectionState("Connected");
+                isServiceRunning = true;
                 spinner.setVisibility(View.VISIBLE);
                 lookUpText.setVisibility(View.VISIBLE);
                 invalidateOptionsMenu();
@@ -105,7 +129,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 invalidateOptionsMenu();
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                displayGattServices(mBluetoothLEService.getSupportedGattServices());
+                    // TODO: in case services have already been discovered, simply retrieve them from the ROOM and enableNotifyCharacteristic on the sensor's data characteristic
+                    displayGattServices(mBluetoothLEService.getSupportedGattServices());
             } else if (BluetoothLowEnergyService.ACTION_DATA_AVAILABLE.equals(action)) {
 
                 if(!isReceivingData) {
@@ -133,6 +158,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_le_connected_device);
+
+        if (savedInstanceState != null) {
+            // Restore value of members from saved state
+            isServiceRunning = savedInstanceState.getBoolean(CONNECTION_STATE);
+            hasReceivedServices = savedInstanceState.getBoolean(RECEIVED_SERVICES);
+        } else {
+            isServiceRunning = false;
+            hasReceivedServices = false;
+        }
 
         deviceStatus = (TextView) findViewById(R.id.deviceStatus);
 
@@ -165,10 +199,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
-        String deviceAddress = intent.getStringExtra("deviceAddress");
-
-        Toast.makeText(LeConnectedDeviceActivity.this, "Device address: " + deviceAddress,
-                Toast.LENGTH_SHORT).show();
+        deviceAddress = intent.getStringExtra("deviceAddress");
 
         if(deviceAddress == null) {
             finish();
@@ -183,24 +214,75 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             lookUpText.setVisibility(View.VISIBLE);
         }
 
-        Intent gattServiceIntent = new Intent(LeConnectedDeviceActivity.this, BluetoothLowEnergyService.class);
+        // Starting service if it is not running yet and binding to it afterwards
+        Intent gattServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
+        // the service will be created only once
+        getApplicationContext().startService(gattServiceIntent);
+        // service clients are able to bind to it at any time
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-        if (!mBluetoothAdapter.enable()) {
-            Intent bleIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(bleIntent, REQUEST_ENABLE_BT);
-        }
         registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
-        if (mBluetoothLEService != null) {
-            final boolean result = mBluetoothLEService.connect(GattAttributesSample.DEVICE_ADDRESS);
+
+       /* if (mBluetoothLEService != null && !isServiceRunning) {
+            final boolean result = mBluetoothLEService.connect(deviceAddress);
             Toast.makeText(LeConnectedDeviceActivity.this,
                     "Connect request result: " + result, Toast.LENGTH_SHORT).show();
-        }
+        }*/
 
 
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
 
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (!mBluetoothAdapter.enable()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        /*if (!isChangingConfigurations()) {
+            unregisterReceiver(mGattUpdateReceiver);
+            unbindService(mServiceConnection);
+            mBluetoothLEService = null;
+        }*/
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // the service will be running if
+        if(isFinishing()) {
+            unregisterReceiver(mGattUpdateReceiver);
+            unbindService(mServiceConnection);
+            Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
+            getApplicationContext().stopService(stoppingServiceIntent);
+            mBluetoothLEService = null;
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_CANCELED) {
+            finish();
+        }
     }
 
 
@@ -211,6 +293,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         return true;
     }
 
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         if(isReceivingData)
@@ -220,6 +303,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -257,7 +341,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                     case R.id.showSami:
                         // TODO: send data to SaMi cloud
                         break;
-                    // TODO: add 'refresh' option
                 }
                 return true;
             }
@@ -265,6 +348,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         popup.show();
     }
+
 
     private void swapLayoutViews() {
         if( expListView.getVisibility() == View.VISIBLE ) {
@@ -281,6 +365,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         }
     }
 
+
     private void hideLayoutViews() {
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
@@ -296,51 +381,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         view.startAnimation(animate);
     }
 
+
     public void slideFromRight(View view) {
         TranslateAnimation animate = new TranslateAnimation(view.getWidth(), 0,0,0);
         animate.setDuration(500);
         animate.setFillAfter(true);
         view.startAnimation(animate);
-    }
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (!mBluetoothAdapter.enable()) {
-            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(intent, REQUEST_ENABLE_BT);
-        }
-        /*registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
-        if (mBluetoothLEService != null) {
-            final boolean result = mBluetoothLEService.connect(GattAttributesSample.DEVICE_ADDRESS);
-            Toast.makeText(LeConnectedDeviceActivity.this,
-                    "Connect request result: " + result, Toast.LENGTH_SHORT).show();
-        }*/
-    }
-
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //unregisterReceiver(mGattUpdateReceiver);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mGattUpdateReceiver);
-        unbindService(mServiceConnection);
-        mBluetoothLEService = null;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_CANCELED) {
-            finish();
-        }
     }
 
 
@@ -361,6 +407,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void displayGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null)
@@ -401,7 +448,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                         characteristicNameString = GattAttributesSample.getName(characteristicUuid);
 
                         if(characteristicNameString != null)
-                            characteristicsNamesList.add(characteristicNameString);// + ", " + characteristicUuid);
+                            characteristicsNamesList.add(characteristicNameString);
                         else
                             characteristicsNamesList.add(characteristicUuid);
 
@@ -431,6 +478,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             }
         }
 
+        hasReceivedServices = true;
         listAdapter = new ExpandableAttributesAdapter(this, servicesList, characteristicsList);
 
         // setting list adapter

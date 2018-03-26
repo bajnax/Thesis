@@ -12,7 +12,7 @@ public class GattAttributesSample {
 
     static {
         attributes.put(UUID_SENSORS_SERVICE, "Temperature and gas service: ");
-        attributes.put(UUID_SENSORS_CHARACTERISTIC, "Temperature and gas characteristic: ");
+        attributes.put(UUID_SENSORS_CHARACTERISTIC, "Temperature and gas characteristic");
     }
 
     public static String getName(String uuid) {

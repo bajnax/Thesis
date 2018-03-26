@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.List;
 import java.util.UUID;
@@ -129,7 +130,17 @@ public class BluetoothLowEnergyService extends Service {
         sendBroadcast(intent);
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+       // Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
+
+        // If we get killed, after returning from here, restart
+        return START_STICKY;
+    }
+
+
     public class LocalBinder extends Binder {
+        // Return this instance of BluetoothLowEnergyService so clients can call public methods
         BluetoothLowEnergyService getService() {
             return BluetoothLowEnergyService.this;
         }
@@ -148,6 +159,7 @@ public class BluetoothLowEnergyService extends Service {
         return super.onUnbind(intent);
     }
 
+    // The IBinder is unique for all clients that bind to the service
     private final IBinder mBinder = new LocalBinder();
 
 
@@ -199,7 +211,7 @@ public class BluetoothLowEnergyService extends Service {
             return false;
         }
 
-        // directly connecting to the Gatt server of device, therefore 'autoConnect' is set to false
+        // connecting to the Gatt server of device. 'autoConnect' is set to true
         mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
         Log.d(TAG, "Trying to create a new connection");
 
@@ -223,6 +235,7 @@ public class BluetoothLowEnergyService extends Service {
         if (mBluetoothGatt == null) {
             return;
         }
+        disconnect();
         mBluetoothGatt.close();
         mBluetoothGatt = null;
     }

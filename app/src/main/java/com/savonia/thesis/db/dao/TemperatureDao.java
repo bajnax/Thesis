@@ -2,13 +2,14 @@ package com.savonia.thesis.db.dao;
 
 
 import android.arch.lifecycle.LiveData;
+import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 
 import com.savonia.thesis.db.entity.Temperature;
 
 import java.util.List;
-
+@Dao
 public interface TemperatureDao {
 
     @Insert

@@ -5,12 +5,14 @@ import android.arch.lifecycle.MutableLiveData;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
+import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 
 import com.savonia.thesis.db.dao.TemperatureDao;
 import com.savonia.thesis.db.entity.Temperature;
 
 @Database(entities = {Temperature.class}, version = 1)
+@TypeConverters({DateConverter.class})
 public abstract class SensorsValuesDatabase extends RoomDatabase {
 
     private final MutableLiveData<Boolean> mIsDatabaseCreated = new MutableLiveData<>();

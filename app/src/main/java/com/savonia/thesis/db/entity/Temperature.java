@@ -3,21 +3,31 @@ package com.savonia.thesis.db.entity;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
-import java.time.LocalDateTime;
+import com.savonia.thesis.db.DateConverter;
+import java.util.Date;
 
 @Entity(tableName = "temperature_table")
 public class Temperature {
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private long id;
 
     @NonNull
     @ColumnInfo(name = "TemperatureValue")
     private double mTemperature;
 
     @ColumnInfo(name = "Date")
-    private LocalDateTime date;
+    private Date date;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public Temperature(double mTemperature) {
         this.mTemperature = mTemperature;
@@ -27,12 +37,11 @@ public class Temperature {
         return this.mTemperature;
     }
 
-    public LocalDateTime getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public int getId() {
-        return id;
+    public void setDate(Date date) {
+        this.date = date;
     }
-
 }

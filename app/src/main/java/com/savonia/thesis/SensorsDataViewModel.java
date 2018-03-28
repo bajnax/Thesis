@@ -15,6 +15,7 @@ import java.util.List;
 public class SensorsDataViewModel extends AndroidViewModel {
     // MediatorLiveData can observe other LiveData objects and react on their emissions.
     private final MediatorLiveData<List<Temperature>> mObservableTemperatures;
+    private CentralRepository mRepository;
 
     public SensorsDataViewModel(Application application) {
         super(application);
@@ -23,8 +24,13 @@ public class SensorsDataViewModel extends AndroidViewModel {
         // set by default null, until we get data from the database.
         mObservableTemperatures.setValue(null);
 
-        LiveData<List<Temperature>> products = CentralRepository.
-                getInstance(SensorsValuesDatabase.getDatabase(application)).getTemperatures();
+        mRepository = CentralRepository.
+                getInstance(SensorsValuesDatabase.getDatabase(application));
+
+        LiveData<List<Temperature>> products = mRepository.getTemperatures();
+
+        /*LiveData<List<Temperature>> products = CentralRepository.
+                getInstance(SensorsValuesDatabase.getDatabase(application)).getTemperatures();*/
 
         // observe the changes of the products from the database and forward them
         mObservableTemperatures.addSource(products, mObservableTemperatures::setValue);
@@ -35,5 +41,9 @@ public class SensorsDataViewModel extends AndroidViewModel {
      */
     public LiveData<List<Temperature>> getTemperatures() {
         return mObservableTemperatures;
+    }
+
+    public void insertTemperature(Temperature temperature) {
+        mRepository.insertTemperature(temperature);
     }
 }

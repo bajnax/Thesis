@@ -248,6 +248,9 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 if(temperatures == null){
                     Toast.makeText(LeConnectedDeviceActivity.this,
                             "No data received", Toast.LENGTH_SHORT).show();
+                } else if(temperatures.size() > 0){
+                    Toast.makeText(LeConnectedDeviceActivity.this,
+                            "Data received at 0: " + temperatures.get(0).getTemperatureValue(), Toast.LENGTH_SHORT).show();
                 }
 
             }

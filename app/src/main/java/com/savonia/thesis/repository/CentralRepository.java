@@ -45,4 +45,8 @@ public class CentralRepository {
         return mObservableTemperatures;
     }
 
+    public void insertTemperature(Temperature temperature) {
+        mDatabase.getTemperatureDao().insert(temperature);
+    }
+
 }

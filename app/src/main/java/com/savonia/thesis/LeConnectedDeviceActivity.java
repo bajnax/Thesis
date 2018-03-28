@@ -2,6 +2,7 @@ package com.savonia.thesis;
 
 import android.animation.LayoutTransition;
 import android.app.ActivityManager;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -17,6 +18,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -36,6 +38,8 @@ import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
+import com.savonia.thesis.db.SensorsValuesDatabase;
+import com.savonia.thesis.db.entity.Temperature;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -231,6 +235,23 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         expListView.setVisibility(View.GONE);
         sensorsGraph.setVisibility(View.GONE);
+
+
+        final SensorsDataViewModel sensorsDataViewModel =
+                ViewModelProviders.of(this).get(SensorsDataViewModel.class);
+
+        sensorsDataViewModel.getTemperatures().observe(this, new Observer<List<Temperature>>() {
+            @Override
+            public void onChanged(@Nullable final List<Temperature> temperatures) {
+                //TODO: Update the cached copy of the temperatures on the graph
+
+                if(temperatures == null){
+                    Toast.makeText(LeConnectedDeviceActivity.this,
+                            "No data received", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
 
     }
 

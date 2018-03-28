@@ -41,7 +41,7 @@ public class CentralRepository {
     /**
      * Get the list of temperatures from the database and get notified when the data changes.
      */
-    public LiveData<List<Temperature>> getProducts() {
+    public LiveData<List<Temperature>> getTemperatures() {
         return mObservableTemperatures;
     }
 

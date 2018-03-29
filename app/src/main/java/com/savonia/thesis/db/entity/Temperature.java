@@ -32,7 +32,6 @@ public class Temperature {
         return id;
     }
 
-    // TODO: use setter for the Temperature value instead of constructor
     public void setTemperatureValue(double mTemperature) {
         this.mTemperatureValue = mTemperature;
     }

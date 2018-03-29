@@ -204,38 +204,20 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         sensorsGraph.getGridLabelRenderer().setVerticalAxisTitle("Value");
         sensorsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
-        // set up horizontal and vertical zooming and scrolling
+        // enabling horizontal zooming and scrolling
         sensorsGraph.getViewport().setScalable(true);
-        sensorsGraph.getViewport().setScrollable(true);
 
-        sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(40);
-        sensorsGraph.getGridLabelRenderer().setLabelHorizontalHeight(40);
+        sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(50);
+        sensorsGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
 
         sensorsGraph.getViewport().setYAxisBoundsManual(true);
         sensorsGraph.getViewport().setMinY(0);
         sensorsGraph.getViewport().setMaxY(40);
 
-
-        SimpleDateFormat mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
-
+        //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
-        sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
-            @Override
-            public String formatLabel(double value, boolean isValueX) {
-                if (isValueX)
-                {
-                    return mDateFormatter.format(new Date((long) value));
-                } else {
-                    return super.formatLabel(value, isValueX);
-                }
-            }
-
-            @Override
-            public void setViewport(Viewport viewport) {
-                super.setViewport(viewport);
-            }
-        });
-
+        SimpleDateFormat mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
+        sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this, mDateFormatter));
         sensorsGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
 
         // as we use dates as labels, the human rounding to nice readable numbers
@@ -295,7 +277,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         sensorsDataViewModel.getTemperatures().observe(this, new Observer<List<Temperature>>() {
             @Override
             public void onChanged(@Nullable final List<Temperature> temperatures) {
-                //TODO: Update the cached copy of the temperatures on the graph
+                //TODO: modify the logic of graph drawing in case of configuration changes
 
                 if(temperatures == null){
                     Toast.makeText(LeConnectedDeviceActivity.this,
@@ -478,8 +460,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         deviceStatus.setText(status);
     }
 
-
-    // TODO: fill the graph with sensors' data via LiveData using Room
+    // TODO: get rid of toasts when you're finished with graph setup
     private void displaySensorsData(String data) {
         if (data != null) {
 
@@ -500,7 +481,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             public void run() {
                 try {
                     Log.d(TAG, "temperature ID: "+ temperature.getId() + " and value: " + temperature.getTemperatureValue());
-                    temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(), temperature.getTemperatureValue()), true, 1000);
+                    temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(), temperature.getTemperatureValue()), false, 1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

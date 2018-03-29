@@ -134,7 +134,7 @@ public class BluetoothLowEnergyService extends Service {
             value = new String(data);
             intent.putExtra(EXTRA_DATA, value);
 
-            //TODO: retrieve the double value from the temperature notification and
+            // retrieving the double value from the temperature notification
 
             if(value.charAt(0) == 't' && !value.contains("g")) {
                 try {

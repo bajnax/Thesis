@@ -209,7 +209,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         sensorsGraph.getViewport().setScrollable(true);
 
         sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(40);
-        sensorsGraph.getGridLabelRenderer().setLabelHorizontalHeight(30);
+        sensorsGraph.getGridLabelRenderer().setLabelHorizontalHeight(40);
 
         sensorsGraph.getViewport().setYAxisBoundsManual(true);
         sensorsGraph.getViewport().setMinY(0);
@@ -304,9 +304,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                     if(temperatures.size() == 1) {
                         // set manual x bounds to have nice steps
                         sensorsGraph.getViewport().setXAxisBoundsManual(true);
-                        sensorsGraph.getViewport().setMinX(temperatures.get(0).getTimestamp());
-                        sensorsGraph.getViewport().setMaxX(temperatures.get(0).getTimestamp() + 6000);
+                        sensorsGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
+                        sensorsGraph.getViewport().setMaxX(((double)temperatures.get(0).getTimestamp() + 6000));
 
+                        Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double)temperatures.get(0).getTimestamp()));
+                        Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format(((double)temperatures.get(0).getTimestamp()+6000)));
                     }
                     displayTemperature(temperatures.get(temperatures.size()-1));
                 }

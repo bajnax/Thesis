@@ -22,6 +22,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -36,16 +37,26 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.LabelFormatter;
+import com.jjoe64.graphview.Viewport;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.db.SensorsValuesDatabase;
 import com.savonia.thesis.db.entity.Temperature;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 public class LeConnectedDeviceActivity extends AppCompatActivity {
+
+    private final static String TAG = LeConnectedDeviceActivity.class.getSimpleName();
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static String CONNECTION_STATE = "ConnectionEstablished";
@@ -60,7 +71,9 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     //TODO: change layout
     private TextView deviceStatus;
     private ExpandableListView expListView;
+    private Runnable mRunnableTemperature;
     private GraphView sensorsGraph;
+    private PointsGraphSeries<DataPoint> temperatureSeries;
     private Toolbar toolBar;
     private ProgressBar spinner;
     private TextView lookUpText;
@@ -184,14 +197,53 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
 
-        //setting up the graph's vertical labels
+        // setting up the graph's vertical labels
         sensorsGraph = (GraphView) findViewById(R.id.graph);
         sensorsGraph.setTitle("Current sensor\'s data");
         sensorsGraph.setTitleColor(R.color.colorPrimaryDark);
-        sensorsGraph.getViewport().setScalableY(true);
         sensorsGraph.getGridLabelRenderer().setVerticalAxisTitle("Value");
         sensorsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
+
+        // set up horizontal and vertical zooming and scrolling
+        sensorsGraph.getViewport().setScalable(true);
+        sensorsGraph.getViewport().setScrollable(true);
+
         sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(40);
+        sensorsGraph.getGridLabelRenderer().setLabelHorizontalHeight(30);
+
+        sensorsGraph.getViewport().setYAxisBoundsManual(true);
+        sensorsGraph.getViewport().setMinY(0);
+        sensorsGraph.getViewport().setMaxY(40);
+
+
+        SimpleDateFormat mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
+
+        // set date label formatter
+        sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX)
+                {
+                    return mDateFormatter.format(new Date((long) value));
+                } else {
+                    return super.formatLabel(value, isValueX);
+                }
+            }
+
+            @Override
+            public void setViewport(Viewport viewport) {
+                super.setViewport(viewport);
+            }
+        });
+
+        sensorsGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
+
+        // as we use dates as labels, the human rounding to nice readable numbers
+        // is not necessary
+        sensorsGraph.getGridLabelRenderer().setHumanRounding(false);
+
+        temperatureSeries = new PointsGraphSeries<>();
+        sensorsGraph.addSeries(temperatureSeries);
 
         expListView = (ExpandableListView) findViewById(R.id.expandableListView);
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -249,8 +301,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                     Toast.makeText(LeConnectedDeviceActivity.this,
                             "No data received", Toast.LENGTH_SHORT).show();
                 } else if(temperatures.size() > 0){
-                    Toast.makeText(LeConnectedDeviceActivity.this,
-                            "Data received at 0: " + temperatures.get(0).getTemperatureValue(), Toast.LENGTH_SHORT).show();
+                    if(temperatures.size() == 1) {
+                        // set manual x bounds to have nice steps
+                        sensorsGraph.getViewport().setXAxisBoundsManual(true);
+                        sensorsGraph.getViewport().setMinX(temperatures.get(0).getTimestamp());
+                        sensorsGraph.getViewport().setMaxX(temperatures.get(0).getTimestamp() + 6000);
+
+                    }
+                    displayTemperature(temperatures.get(temperatures.size()-1));
                 }
 
             }
@@ -430,6 +488,23 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             Toast.makeText(LeConnectedDeviceActivity.this, "Broadcasted data: " + data,
                     Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    private void displayTemperature(Temperature temperature) {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "temperature ID: "+ temperature.getId() + " and value: " + temperature.getTemperatureValue());
+                    temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(), temperature.getTemperatureValue()), true, 1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
     }
 
 

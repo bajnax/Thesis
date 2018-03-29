@@ -5,6 +5,7 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
 
@@ -46,6 +47,10 @@ public class Temperature {
 
     public Date getDate() {
         return date;
+    }
+
+    public long getTimestamp() {
+        return date.getTime();
     }
 
     public Temperature() {}

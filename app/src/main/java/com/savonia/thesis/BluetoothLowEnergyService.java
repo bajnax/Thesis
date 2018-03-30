@@ -175,14 +175,14 @@ public class BluetoothLowEnergyService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d(TAG, "BINDING");
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         // when LeConnectedDeviceActivity is destroyed, it unbinds the current service
-        // afterwards, the cleanup is performed
-        close();
+        Log.d(TAG, "UNBINDING");
         return super.onUnbind(intent);
     }
 
@@ -262,6 +262,7 @@ public class BluetoothLowEnergyService extends Service {
         if (mBluetoothGatt == null) {
             return;
         }
+        Log.d(TAG, "Closing BluetoothGatt");
         disconnect();
         mBluetoothGatt.close();
         mBluetoothGatt = null;

@@ -217,7 +217,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         SimpleDateFormat mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
-        sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this, mDateFormatter));
+        sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(LeConnectedDeviceActivity.this, mDateFormatter));
         sensorsGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
 
         // as we use dates as labels, the human rounding to nice readable numbers
@@ -321,25 +321,32 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        /*if (!isChangingConfigurations()) {
+        if (!isChangingConfigurations()) {
             unregisterReceiver(mGattUpdateReceiver);
             unbindService(mServiceConnection);
+            mBluetoothLEService.close();
+            Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
+            getApplicationContext().stopService(stoppingServiceIntent);
             mBluetoothLEService = null;
-        }*/
+        } else {
+            // service keeps running, but the activity unbinds on configuration changes
+            unregisterReceiver(mGattUpdateReceiver);
+            unbindService(mServiceConnection);
+        }
     }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // the service will be running if
-        if(isFinishing()) {
+        // the service will be running after the configuration changes
+        /*if(isFinishing()) {
             unregisterReceiver(mGattUpdateReceiver);
             unbindService(mServiceConnection);
             Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
             getApplicationContext().stopService(stoppingServiceIntent);
             mBluetoothLEService = null;
-        }
+        }*/
     }
 
 

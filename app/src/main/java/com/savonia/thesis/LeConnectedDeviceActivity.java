@@ -50,6 +50,7 @@ import com.savonia.thesis.db.entity.Temperature;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -220,6 +221,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(LeConnectedDeviceActivity.this, mDateFormatter));
         sensorsGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
 
+        Calendar calendar = Calendar.getInstance();
+        long t1 = calendar.getTimeInMillis();
+        long t2 = calendar.getTimeInMillis() + 15000;
+
+        sensorsGraph.getViewport().setXAxisBoundsManual(true);
+        sensorsGraph.getViewport().setMinX((double)t1);
+        sensorsGraph.getViewport().setMaxX(((double)t2));
+
+
         // as we use dates as labels, the human rounding to nice readable numbers
         // is not necessary
         sensorsGraph.getGridLabelRenderer().setHumanRounding(false);
@@ -285,13 +295,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 } else if(temperatures.size() > 0){
                     if(temperatures.size() == 1) {
                         // set manual x bounds to have nice steps
-                        sensorsGraph.getViewport().setXAxisBoundsManual(true);
+                        //sensorsGraph.getViewport().setXAxisBoundsManual(true);
                         sensorsGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
-                        sensorsGraph.getViewport().setMaxX(((double)temperatures.get(0).getTimestamp() + 6000));
+                        sensorsGraph.getViewport().setMaxX((double)sensorsGraph.getViewport().getMinX(false) + 15000);
 
                         Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double)temperatures.get(0).getTimestamp()));
-                        Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format(((double)temperatures.get(0).getTimestamp()+6000)));
+                        Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format(((double)sensorsGraph.getViewport().getMinX(false) + 15000)));
                     }
+                    /*//scales programmatically
+                    sensorsGraph.getViewport().setMaxX((double)temperatures.get(temperatures.size()-1).getTimestamp());*/
                     displayTemperature(temperatures.get(temperatures.size()-1));
                 }
 

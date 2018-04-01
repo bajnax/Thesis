@@ -136,7 +136,6 @@ public class BluetoothLowEnergyService extends Service {
             intent.putExtra(EXTRA_DATA, value);
 
             // retrieving the double value from the temperature notification
-
             if(value.charAt(0) == 't' && !value.contains("g")) {
                 try {
                     StringBuilder sb = new StringBuilder(value);
@@ -151,6 +150,7 @@ public class BluetoothLowEnergyService extends Service {
                     e.printStackTrace();
                 }
             } else if(value.charAt(0) == 'g' && !value.contains("t")) {
+                // retrieving the double value from the gas notification
                 try {
                     StringBuilder sb = new StringBuilder(value);
                     value = sb.substring(2);

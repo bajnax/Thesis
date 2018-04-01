@@ -8,10 +8,12 @@ import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 
+import com.savonia.thesis.db.dao.GasDao;
 import com.savonia.thesis.db.dao.TemperatureDao;
+import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
 
-@Database(entities = {Temperature.class}, version = 1)
+@Database(entities = {Temperature.class, Gas.class}, version = 1)
 @TypeConverters({DateConverter.class})
 public abstract class SensorsValuesDatabase extends RoomDatabase {
 
@@ -20,6 +22,7 @@ public abstract class SensorsValuesDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "sensors_values_database.db";
 
     public abstract TemperatureDao getTemperatureDao();
+    public abstract GasDao getGasDao();
 
     //Singleton pattern is used, since each RoomDatabase instance is fairly expensive
     public static synchronized SensorsValuesDatabase getDatabase(final Context context) {

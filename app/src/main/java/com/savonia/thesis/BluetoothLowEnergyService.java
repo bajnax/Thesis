@@ -17,6 +17,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.savonia.thesis.db.SensorsValuesDatabase;
+import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
 import com.savonia.thesis.repository.CentralRepository;
 
@@ -146,6 +147,19 @@ public class BluetoothLowEnergyService extends Service {
 
                     Temperature temperature = new Temperature(tempValue);
                     CentralRepository.getInstance(SensorsValuesDatabase.getDatabase(getApplicationContext())).insertTemperature(temperature);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            } else if(value.charAt(0) == 'g' && !value.contains("t")) {
+                try {
+                    StringBuilder sb = new StringBuilder(value);
+                    value = sb.substring(2);
+                    value = value.trim();
+
+                    double gasValue = Double.parseDouble(value);
+
+                    Gas gas = new Gas(gasValue);
+                    CentralRepository.getInstance(SensorsValuesDatabase.getDatabase(getApplicationContext())).insertGas(gas);
                 }catch (Exception e){
                     e.printStackTrace();
                 }

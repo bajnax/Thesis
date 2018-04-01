@@ -335,8 +335,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         super.onStop();
         if (!isChangingConfigurations()) {
             unregisterReceiver(mGattUpdateReceiver);
-            unbindService(mServiceConnection);
             mBluetoothLEService.close();
+            unbindService(mServiceConnection);
             Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
             getApplicationContext().stopService(stoppingServiceIntent);
             mBluetoothLEService = null;

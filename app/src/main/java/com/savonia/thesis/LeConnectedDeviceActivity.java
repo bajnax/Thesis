@@ -2,6 +2,7 @@ package com.savonia.thesis;
 
 import android.animation.LayoutTransition;
 import android.app.ActivityManager;
+import android.app.Service;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothAdapter;
@@ -17,8 +18,12 @@ import android.content.ServiceConnection;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -46,6 +51,7 @@ import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.db.SensorsValuesDatabase;
+import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
 
 import java.text.SimpleDateFormat;
@@ -55,13 +61,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class LeConnectedDeviceActivity extends AppCompatActivity {
+public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFragmentInteractionListener<Object> {
 
     private final static String TAG = LeConnectedDeviceActivity.class.getSimpleName();
 
     private final static int REQUEST_ENABLE_BT = 1;
-    private final static String CONNECTION_STATE = "ConnectionEstablished";
+    private final static String SERVICE_STATE = "ServiceRunning";
     private final static String RECEIVED_SERVICES = "ServicesReceived";
+
+    private SimpleDateFormat mDateFormatter;
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -69,30 +77,34 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     private List<String> servicesList;
     private HashMap<String, List<String>> characteristicsList;
 
-    //TODO: change layout
-    private TextView deviceStatus;
-    private ExpandableListView expListView;
-    private Runnable mRunnableTemperature;
-    private GraphView sensorsGraph;
-    private PointsGraphSeries<DataPoint> temperatureSeries;
     private Toolbar toolBar;
-    private ProgressBar spinner;
-    private TextView lookUpText;
+
+    // used for tabs and viewPager
+    private NonSwipeableViewPager viewPager;
+    private ConnectedDevicePagerAdapter pagerAdapter;
+    private TabLayout tabLayout;
 
     private BluetoothGattCharacteristic mNotifyCharacteristic;
-    private boolean isReceivingData = false;
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
     // used to check if services had been already received
     private boolean isServiceRunning = false;
     private boolean hasReceivedServices = false;
+    private boolean isReceivingData = false;
+
     private String deviceAddress;
+    private ServicesFragment servicesFragment;
+
+    // replace graph icons with material ones
+    private int[] imageResId = {
+            R.drawable.services, R.drawable.temperature, R.drawable.gas
+    };
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         // Save some data
-        savedInstanceState.putBoolean(CONNECTION_STATE, isServiceRunning);
+        savedInstanceState.putBoolean(SERVICE_STATE, isServiceRunning);
         savedInstanceState.putBoolean(RECEIVED_SERVICES, hasReceivedServices);
 
         // Always call the superclass so it can save the view hierarchy state
@@ -134,21 +146,25 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLowEnergyService.ACTION_GATT_CONNECTED.equals(action)) {
-                updateConnectionState("Connected");
                 isServiceRunning = true;
-                spinner.setVisibility(View.VISIBLE);
-                lookUpText.setVisibility(View.VISIBLE);
-                invalidateOptionsMenu();
-            } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                updateConnectionState("Disconnected");
-                isReceivingData = false;
-                spinner.setVisibility(View.VISIBLE);
-                lookUpText.setVisibility(View.VISIBLE);
                 invalidateOptionsMenu();
 
+                // Setting up the servicesFragment' connection state
+                setConnectionState(0);
+
+            } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                isReceivingData = false;
+                invalidateOptionsMenu();
+
+                // Setting up the servicesFragment' connection state
+                setConnectionState(1);
+
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                    // TODO: in case services have already been discovered, simply retrieve them from the ROOM and enableNotifyCharacteristic on the sensor's data characteristic
                     displayGattServices(mBluetoothLEService.getSupportedGattServices());
+
+                // Setting up the servicesFragment' connection state
+                setConnectionState(2);
+
             } else if (BluetoothLowEnergyService.ACTION_DATA_AVAILABLE.equals(action)) {
 
                 if(!isReceivingData) {
@@ -157,6 +173,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                 }
 
                 displaySensorsData(intent.getStringExtra(BluetoothLowEnergyService.EXTRA_DATA));
+
+                // Setting up the servicesFragment' connection state
+                setConnectionState(3);
+
             }
         }
     };
@@ -179,65 +199,37 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             // Restore value of members from saved state
-            isServiceRunning = savedInstanceState.getBoolean(CONNECTION_STATE);
+            isServiceRunning = savedInstanceState.getBoolean(SERVICE_STATE);
             hasReceivedServices = savedInstanceState.getBoolean(RECEIVED_SERVICES);
         } else {
             isServiceRunning = false;
             hasReceivedServices = false;
         }
 
-        deviceStatus = (TextView) findViewById(R.id.deviceStatus);
-
-        // spinner, its neighbouring textView, graph and connectivity to the SaMi cloud
-        // won't be shown if another device is connected
-        spinner = (ProgressBar) findViewById(R.id.spinner);
-        lookUpText = (TextView) findViewById(R.id.lookUpTextView);
-        spinner.setVisibility(View.GONE);
-        lookUpText.setVisibility(View.GONE);
-
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
 
-        // setting up the graph's vertical labels
-        sensorsGraph = (GraphView) findViewById(R.id.graph);
-        sensorsGraph.setTitle("Current sensor\'s data");
-        sensorsGraph.setTitleColor(R.color.colorPrimaryDark);
-        sensorsGraph.getGridLabelRenderer().setVerticalAxisTitle("Value");
-        sensorsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
+        // Setting up the tabs and viewPager
+        viewPager = (NonSwipeableViewPager) findViewById(R.id.viewpager);
+        // 2 fragments on the left and on the right from the currently selected one
+        // will keep their state
+        viewPager.setOffscreenPageLimit(2);
 
-        // enabling horizontal zooming and scrolling
-        sensorsGraph.getViewport().setScalable(true);
+        // Create an adapter that knows which fragment should be shown on each page
+        pagerAdapter = new ConnectedDevicePagerAdapter(LeConnectedDeviceActivity.this, getSupportFragmentManager());
 
-        sensorsGraph.getGridLabelRenderer().setLabelVerticalWidth(50);
-        sensorsGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
+        // Set the adapter onto the view pager
+        viewPager.setAdapter(pagerAdapter);
 
-        sensorsGraph.getViewport().setYAxisBoundsManual(true);
-        sensorsGraph.getViewport().setMinY(0);
-        sensorsGraph.getViewport().setMaxY(40);
+        // Give the TabLayout the ViewPager
+        tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+        tabLayout.setupWithViewPager(viewPager);
 
-        //TODO: make the date labels on the X axis to be shown properly
-        // set date label formatter
-        SimpleDateFormat mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
-        sensorsGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(LeConnectedDeviceActivity.this, mDateFormatter));
-        sensorsGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
+        for (int i = 0; i < imageResId.length; i++) {
+            tabLayout.getTabAt(i).setIcon(imageResId[i]);
+            //tabLayout.getTabAt(i).getIcon().setColorFilter(getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
+        }
 
-        Calendar calendar = Calendar.getInstance();
-        long t1 = calendar.getTimeInMillis();
-        long t2 = calendar.getTimeInMillis() + 15000;
-
-        sensorsGraph.getViewport().setXAxisBoundsManual(true);
-        sensorsGraph.getViewport().setMinX((double)t1);
-        sensorsGraph.getViewport().setMaxX(((double)t2));
-
-
-        // as we use dates as labels, the human rounding to nice readable numbers
-        // is not necessary
-        sensorsGraph.getGridLabelRenderer().setHumanRounding(false);
-
-        temperatureSeries = new PointsGraphSeries<>();
-        sensorsGraph.addSeries(temperatureSeries);
-
-        expListView = (ExpandableListView) findViewById(R.id.expandableListView);
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
         if(bluetoothManager != null)
@@ -253,15 +245,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             finish();
         }
 
-        // setting up the progress bar, in case the BLE Shield is connected
-        if(deviceAddress.equals(GattAttributesSample.DEVICE_ADDRESS)) {
-            Drawable progressDrawable = spinner.getIndeterminateDrawable().mutate();
-            progressDrawable.setColorFilter(getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
-            spinner.setProgressDrawable(progressDrawable);
-            spinner.setVisibility(View.VISIBLE);
-            lookUpText.setVisibility(View.VISIBLE);
-        }
-
         // Starting service if it is not running yet and binding to it afterwards
         Intent gattServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
         // the service will be created only once
@@ -270,45 +253,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
         registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
 
-       /* if (mBluetoothLEService != null && !isServiceRunning) {
-            final boolean result = mBluetoothLEService.connect(deviceAddress);
-            Toast.makeText(LeConnectedDeviceActivity.this,
-                    "Connect request result: " + result, Toast.LENGTH_SHORT).show();
-        }*/
+    }
 
-
-        expListView.setVisibility(View.GONE);
-        sensorsGraph.setVisibility(View.GONE);
-
-
-        final SensorsDataViewModel sensorsDataViewModel =
-                ViewModelProviders.of(this).get(SensorsDataViewModel.class);
-
-        sensorsDataViewModel.getTemperatures().observe(this, new Observer<List<Temperature>>() {
-            @Override
-            public void onChanged(@Nullable final List<Temperature> temperatures) {
-                //TODO: modify the logic of graph drawing in case of configuration changes
-
-                if(temperatures == null){
-                    Toast.makeText(LeConnectedDeviceActivity.this,
-                            "No data received", Toast.LENGTH_SHORT).show();
-                } else if(temperatures.size() > 0){
-                    if(temperatures.size() == 1) {
-                        // set manual x bounds to have nice steps
-                        //sensorsGraph.getViewport().setXAxisBoundsManual(true);
-                        sensorsGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
-                        sensorsGraph.getViewport().setMaxX((double)sensorsGraph.getViewport().getMinX(false) + 15000);
-
-                        Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double)temperatures.get(0).getTimestamp()));
-                        Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format(((double)sensorsGraph.getViewport().getMinX(false) + 15000)));
-                    }
-                    /*//scales programmatically
-                    sensorsGraph.getViewport().setMaxX((double)temperatures.get(temperatures.size()-1).getTimestamp());*/
-                    displayTemperature(temperatures.get(temperatures.size()-1));
-                }
-
-            }
-        });
+    // might be used to receive messages from fragments
+    @Override
+    public void onFragmentInteraction(String tag, Object data) {
 
     }
 
@@ -333,7 +282,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (!isChangingConfigurations()) {
+        /*if (!isChangingConfigurations())*/
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isFinishing()) {
             unregisterReceiver(mGattUpdateReceiver);
             mBluetoothLEService.close();
             unbindService(mServiceConnection);
@@ -345,20 +301,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             unregisterReceiver(mGattUpdateReceiver);
             unbindService(mServiceConnection);
         }
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // the service will be running after the configuration changes
-        /*if(isFinishing()) {
-            unregisterReceiver(mGattUpdateReceiver);
-            unbindService(mServiceConnection);
-            Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
-            getApplicationContext().stopService(stoppingServiceIntent);
-            mBluetoothLEService = null;
-        }*/
     }
 
 
@@ -410,9 +352,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
         popup.getMenuInflater()
                 .inflate(R.menu.actions, popup.getMenu());
 
-        if(expListView.getVisibility() == View.VISIBLE)
-            popup.getMenu().findItem(R.id.showServices).setTitle(R.string.draw_graph);
-        else
             popup.getMenu().findItem(R.id.showServices).setTitle(R.string.show_services);
 
 
@@ -421,7 +360,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.showServices:
-                        swapLayoutViews();
+                        //swapLayoutViews();
                         break;
                     case R.id.showSami:
                         // TODO: send data to SaMi cloud
@@ -435,78 +374,21 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
     }
 
 
-    private void swapLayoutViews() {
-        if( expListView.getVisibility() == View.VISIBLE ) {
-            slideToLeft(expListView);
-            slideFromRight(sensorsGraph);
-            expListView.setVisibility(View.GONE);
-            sensorsGraph.setVisibility(View.VISIBLE);
-        }
-        else {
-            slideToLeft(sensorsGraph);
-            slideFromRight(expListView);
-            sensorsGraph.setVisibility(View.GONE);
-            expListView.setVisibility(View.VISIBLE);
-        }
+    private void setConnectionState(int connectionState) {
+        String tag = pagerAdapter.getServicesFragmentTag();
+        servicesFragment = (ServicesFragment) getSupportFragmentManager().findFragmentByTag(tag);
+
+        if(servicesFragment != null)
+            if(servicesFragment.isResumed())
+                servicesFragment.setConnectionState(connectionState, hasReceivedServices);
     }
 
 
-    private void hideLayoutViews() {
-        expListView.setVisibility(View.GONE);
-        sensorsGraph.setVisibility(View.GONE);
-        spinner.setVisibility(View.VISIBLE);
-        lookUpText.setVisibility(View.VISIBLE);
-        lookUpText.setText(R.string.connection_lost);
-    }
-
-
-    public void slideToLeft(View view){
-        TranslateAnimation animate = new TranslateAnimation(0,-view.getWidth()*2,0,0);
-        animate.setDuration(500);
-        view.startAnimation(animate);
-    }
-
-
-    public void slideFromRight(View view) {
-        TranslateAnimation animate = new TranslateAnimation(view.getWidth(), 0,0,0);
-        animate.setDuration(500);
-        animate.setFillAfter(true);
-        view.startAnimation(animate);
-    }
-
-
-    private void updateConnectionState(final String status) {
-        deviceStatus.setText(status);
-    }
-
-    // TODO: get rid of toasts when you're finished with graph setup
     private void displaySensorsData(String data) {
         if (data != null) {
-
-            // If the app is receiving data, then it can be shown on a graph
-            spinner.setVisibility(View.GONE);
-            lookUpText.setVisibility(View.GONE);
-
             Toast.makeText(LeConnectedDeviceActivity.this, "Broadcasted data: " + data,
                     Toast.LENGTH_SHORT).show();
         }
-    }
-
-
-    private void displayTemperature(Temperature temperature) {
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.d(TAG, "temperature ID: "+ temperature.getId() + " and value: " + temperature.getTemperatureValue());
-                    temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(), temperature.getTemperatureValue()), false, 1000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
     }
 
 
@@ -515,12 +397,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             return;
         String characteristicUuid = null;
         String serviceUuid = "unknown service";
-        String serviceName = "unknown service";
+        /*String serviceName = "unknown service";
         String characteristicNameString = "unknown characteristic";
         servicesList = new ArrayList<String>();
-        characteristicsList = new HashMap<String, List<String>>();
+        characteristicsList = new HashMap<String, List<String>>();*/
 
-        int serviceNumber = 0;
+        //int serviceNumber = 0;
 
         // TODO: get proper names for services and characteristics
 
@@ -529,16 +411,16 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
             // searching through characteristics of the service with sensors' data
             if (currentGattService != null) {
                 serviceUuid = currentGattService.getUuid().toString();
-                serviceName = GattAttributesSample.getName(serviceUuid);
+                /*serviceName = GattAttributesSample.getName(serviceUuid);
 
                 if(serviceName != null)
                     servicesList.add(serviceName);// + ", " + serviceUuid);
                 else
-                    servicesList.add(serviceUuid);
+                    servicesList.add(serviceUuid);*/
 
                 List<BluetoothGattCharacteristic> gattCharacteristics =
                         currentGattService.getCharacteristics();
-                List<String> characteristicsNamesList = new ArrayList<String>();
+                //List<String> characteristicsNamesList = new ArrayList<String>();
 
                 for (BluetoothGattCharacteristic currentGattCharacteristic : gattCharacteristics) {
 
@@ -546,18 +428,16 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                     if (currentGattCharacteristic != null) {
 
                         characteristicUuid = currentGattCharacteristic.getUuid().toString();
-                        characteristicNameString = GattAttributesSample.getName(characteristicUuid);
+                        /*characteristicNameString = GattAttributesSample.getName(characteristicUuid);
 
                         if(characteristicNameString != null)
                             characteristicsNamesList.add(characteristicNameString);
                         else
-                            characteristicsNamesList.add(characteristicUuid);
+                            characteristicsNamesList.add(characteristicUuid);*/
 
                         // enabling notification for the characteristics with the sensors' data
                         if(serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)
                                 && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {
-
-                            lookUpText.setText(R.string.waiting_notified_characteristic);
 
                             mNotifyCharacteristic = currentGattCharacteristic;
                             // setting notification for the current characteristic
@@ -573,18 +453,17 @@ public class LeConnectedDeviceActivity extends AppCompatActivity {
                     }
                 }
 
-                characteristicsList.put(servicesList.get(serviceNumber), characteristicsNamesList);
-                serviceNumber++;
+                /*characteristicsList.put(servicesList.get(serviceNumber), characteristicsNamesList);
+                serviceNumber++;*/
 
             }
         }
 
         hasReceivedServices = true;
-        listAdapter = new ExpandableAttributesAdapter(this, servicesList, characteristicsList);
+        /*listAdapter = new ExpandableAttributesAdapter(this, servicesList, characteristicsList);
 
         // setting list adapter
-        expListView.setAdapter(listAdapter);
-        expListView.setVisibility(View.VISIBLE);
+        expListView.setAdapter(listAdapter);*/
     }
 
 }

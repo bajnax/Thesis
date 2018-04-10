@@ -11,74 +11,27 @@
         android:id="@+id/tool_bar"
         layout="@layout/tool_bar" />
 
-    <TextView
-        android:id="@+id/deviceStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="31dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:shadowColor="@color/colorPrimary"
-        android:shadowDx="1.0"
-        android:shadowDy="1.0"
-        android:shadowRadius="2.0"
-        android:text="@string/connectivity_status"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tool_bar" />
-
-    <ExpandableListView
-        android:id="@+id/expandableListView"
+    <android.support.design.widget.TabLayout
+        android:id="@+id/sliding_tabs"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="20dp"
-        android:groupIndicator="@null"
-        app:layout_constraintHeight_default="wrap"
-        app:layout_constraintBottom_toTopOf="@+id/spinner"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/deviceStatus"
-        app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintVertical_chainStyle="packed"
-        app:layout_goneMarginBottom="10dp" />
-
-    <ProgressBar
-        android:id="@+id/spinner"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintBottom_toTopOf="@+id/lookUpTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/expandableListView"
-        app:layout_goneMarginTop="40dp"
-        app:layout_goneMarginBottom="10dp"/>
-
-    <TextView
-        android:id="@+id/lookUpTextView"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="10dp"
-        android:text="@string/waiting_services"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tool_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinner"/>
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:tabIndicatorColor ="@color/colorMain"/>
 
-    <com.jjoe64.graphview.GraphView
-        android:id="@+id/graph"
+    <com.savonia.thesis.NonSwipeableViewPager
+        android:id="@+id/viewpager"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="5dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="20dp"
+        android:background="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/deviceStatus"
+        app:layout_constraintTop_toBottomOf="@+id/sliding_tabs"
         app:layout_constraintVertical_bias="0.5"
         app:layout_constraintHorizontal_bias="0.5"/>
 
-</android.support.constraint.ConstraintLayout>
+ </android.support.constraint.ConstraintLayout>

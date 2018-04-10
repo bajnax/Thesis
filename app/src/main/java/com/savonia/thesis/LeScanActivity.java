@@ -138,6 +138,7 @@ public class LeScanActivity extends AppCompatActivity {
                 // Enabling location services, if they are disabled
                 enableLocation();
             }
+
         }
     }
 
@@ -205,13 +206,8 @@ public class LeScanActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mLeDeviceListAdapter.clear();
-                mLeDeviceListAdapter.notifyDataSetChanged();
-            }
-        });
+        mLeDeviceListAdapter.clear();
+        mLeDeviceListAdapter.notifyDataSetChanged();
         stopScanning();
     }
 

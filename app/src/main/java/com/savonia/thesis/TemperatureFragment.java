@@ -1,5 +1,6 @@
 package com.savonia.thesis;
 
+import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -37,12 +38,13 @@ public class TemperatureFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String TAG = TemperatureFragment.class.getSimpleName();
 
+    //private boolean updateGraphOnPostResume = false;
     private String mParam1;
     private GraphView temperatureGraph;
     private View rootView;
     private PointsGraphSeries<DataPoint> temperatureSeries;
     private SimpleDateFormat mDateFormatter;
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable mTimer1;
     private Runnable mTimer2;
 
@@ -84,13 +86,10 @@ public class TemperatureFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-
-
-
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_temperature, container, false);
         temperatureGraph = (GraphView) rootView.findViewById(R.id.temperatureGraph);
-        mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
+        mDateFormatter = new SimpleDateFormat("HH:mm:ss");
 
         temperatureGraph.setTitle("Current sensor\'s data");
         temperatureGraph.setTitleColor(R.color.colorPrimaryDark);
@@ -98,10 +97,10 @@ public class TemperatureFragment extends Fragment {
         temperatureGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
         // enabling horizontal zooming and scrolling
-        temperatureGraph.getViewport().setScalable(true);
+        temperatureGraph.getViewport().setScrollable(true);
 
-        temperatureGraph.getGridLabelRenderer().setLabelVerticalWidth(75);
-        temperatureGraph.getGridLabelRenderer().setLabelHorizontalHeight(75);
+        temperatureGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
+        temperatureGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
 
         temperatureGraph.getViewport().setYAxisBoundsManual(true);
         temperatureGraph.getViewport().setMinY(0);
@@ -110,7 +109,7 @@ public class TemperatureFragment extends Fragment {
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         temperatureGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
-        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
+        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 2 because of the space
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
@@ -138,25 +137,33 @@ public class TemperatureFragment extends Fragment {
 
                 } else if(temperatures.size() > 0) {
 
+                    //updates the graph on resume, but quite slowly
+                    /* if(temperatures.size() > 1 && updateGraphOnPostResume) {
+                        updateGraphOnPostResume = false;
+                        Log.i(TAG, "RESUME GRAPH RESET");
+                        temperatureGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
+                        temperatureGraph.getViewport().setMaxX((double)temperatureGraph.getViewport().getMinX(false) + 15000);
+                        displayTemperatures(temperatures);*/
+
                     // if temperatures are present in the database, but the graph is empty, then
                     // most probably activity had been recreated and the graph should be populated with the data again
                     if(temperatureSeries.isEmpty() && temperatures.size() > 1) {
+                        Log.i(TAG, "RESETTING TEMPERATURE GRAPH AFTER CONFIGURATION CHANGES");
 
                         temperatureGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
-                        temperatureGraph.getViewport().setMaxX((double)temperatureGraph.getViewport().getMinX(false) + 15000);
+                        temperatureGraph.getViewport().setMaxX(temperatureGraph.getViewport().getMinX(false) + 15000);
 
                         displayTemperatures(temperatures);
 
                     } else {
-
                         // if populating the graph with data for the first time
                         if (temperatures.size() == 1) {
                             // set manual x bounds to have nice steps
                             temperatureGraph.getViewport().setMinX((double) temperatures.get(0).getTimestamp());
-                            temperatureGraph.getViewport().setMaxX((double) temperatureGraph.getViewport().getMinX(false) + 15000);
+                            temperatureGraph.getViewport().setMaxX(temperatureGraph.getViewport().getMinX(false) + 15000);
 
                             Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double) temperatures.get(0).getTimestamp()));
-                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format(((double) temperatureGraph.getViewport().getMinX(false) + 15000)));
+                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format((temperatureGraph.getViewport().getMinX(false) + 15000)));
                         }
 
                         // appending each data point to the graph upon addition to the database
@@ -173,6 +180,13 @@ public class TemperatureFragment extends Fragment {
     }
 
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        //this.updateGraphOnPostResume = true;
+    }
+
+
     private void displayTemperatures(List<Temperature> temperatures) {
 
         mTimer2 = new Runnable()
@@ -180,10 +194,14 @@ public class TemperatureFragment extends Fragment {
             @Override
             public void run() {
                 try {
+                    DataPoint[] values = new DataPoint[temperatures.size()];
                     for (int i = 0; i < temperatures.size(); i++){
                         Log.i(TAG, "temperature timestamp: " + temperatures.get(i).getTimestamp() + " and id: " + temperatures.get(i).getId());
-                        temperatureSeries.appendData(new DataPoint(temperatures.get(i).getTimestamp(), temperatures.get(i).getTemperatureValue()), false, 1000);
+                        DataPoint t = new DataPoint(temperatures.get(i).getTimestamp(),temperatures.get(i).getTemperatureValue());
+                        values[i] = t;
                     }
+                    temperatureSeries.resetData(values);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -196,20 +214,6 @@ public class TemperatureFragment extends Fragment {
 
 
     private void displayTemperature(Temperature temperature) {
-
-        /*if(isAdded()) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Log.d(TAG, "temperature ID: " + temperature.getId() + " and value: " + temperature.getTemperatureValue());
-                        temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(), temperature.getTemperatureValue()), false, 1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-        }*/
 
         // changes made when the app was paused are shown only after the configChanges
         mTimer1 = new Runnable()

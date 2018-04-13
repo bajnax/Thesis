@@ -130,6 +130,7 @@ public class ServicesFragment extends Fragment {
         }
     }
 
+
     public void setConnectionState(int connectionState, boolean hasReceivedServices) {
         this.connectionState = connectionState;
         this.hasReceivedServices = hasReceivedServices;

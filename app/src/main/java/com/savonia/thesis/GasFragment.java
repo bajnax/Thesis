@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -42,7 +43,7 @@ public class GasFragment extends Fragment {
     private View rootView;
     private PointsGraphSeries<DataPoint> gasSeries;
     private SimpleDateFormat mDateFormatter;
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable mTimer1;
     private Runnable mTimer2;
 
@@ -136,14 +137,14 @@ public class GasFragment extends Fragment {
 
                 } else if(gases.size() > 0) {
 
-
                     // if gas values are present in the database, but the graph is empty, then
                     // most probably activity had been recreated and the graph should be populated with the data again
                     if (gasSeries.isEmpty() && gases.size() > 1) {
+                        Log.i(TAG, "RESETTING GAS GRAPH AFTER CONFIGURATION CHANGES");
 
                         // set manual x bounds to have nice steps
                         gasGraph.getViewport().setMinX((double) gases.get(0).getTimestamp());
-                        gasGraph.getViewport().setMaxX((double) gasGraph.getViewport().getMinX(false) + 15000);
+                        gasGraph.getViewport().setMaxX(gasGraph.getViewport().getMinX(false) + 15000);
 
                         displayGases(gases);
 
@@ -153,10 +154,10 @@ public class GasFragment extends Fragment {
                         if (gases.size() == 1) {
                             // set manual x bounds to have nice steps
                             gasGraph.getViewport().setMinX((double) gases.get(0).getTimestamp());
-                            gasGraph.getViewport().setMaxX((double) gasGraph.getViewport().getMinX(false) + 15000);
+                            gasGraph.getViewport().setMaxX(gasGraph.getViewport().getMinX(false) + 15000);
 
                             Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double) gases.get(0).getTimestamp()));
-                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format(((double) gasGraph.getViewport().getMinX(false) + 15000)));
+                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format((gasGraph.getViewport().getMinX(false) + 15000)));
                         }
 
                         Log.i(TAG, "Gas ID: " + gases.get(gases.size() - 1).getId() + " and timestamp: " + gases.get(gases.size() - 1).getTimestamp());
@@ -172,7 +173,7 @@ public class GasFragment extends Fragment {
 
     private void displayGases(List<Gas> gases) {
 
-        mTimer2 = new Runnable()
+        /*mTimer2 = new Runnable()
         {
             @Override
             public void run() {
@@ -181,6 +182,24 @@ public class GasFragment extends Fragment {
                         Log.i(TAG, "gas timestamp: "+ gases.get(i).getTimestamp() + " and id: " + gases.get(i).getId());
                         gasSeries.appendData(new DataPoint(gases.get(i).getTimestamp(), gases.get(i).getGasValue()), false, 1000);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };*/
+
+        mTimer2 = new Runnable()
+        {
+            @Override
+            public void run() {
+                try {
+                    DataPoint[] values = new DataPoint[gases.size()];
+                    for (int i = 0; i < gases.size(); i++){
+                        Log.i(TAG, "gas timestamp: "+ gases.get(i).getTimestamp() + " and id: " + gases.get(i).getId());
+                        DataPoint t = new DataPoint(gases.get(i).getTimestamp(), gases.get(i).getGasValue());
+                        values[i] = t;
+                    }
+                    gasSeries.resetData(values);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -238,11 +257,4 @@ public class GasFragment extends Fragment {
         mHandler.removeCallbacks(mTimer2);
         mListener = null;
     }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     */
 }

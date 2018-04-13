@@ -12,7 +12,9 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -28,11 +30,13 @@ import java.util.UUID;
 public class BluetoothLowEnergyService extends Service {
     private final static String TAG = BluetoothLowEnergyService.class.getSimpleName();
 
+    private Handler mHandler = new Handler(Looper.getMainLooper());
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
     private int mConnectionState = STATE_DISCONNECTED;
+
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -85,6 +89,7 @@ public class BluetoothLowEnergyService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+                Log.d(TAG, "Services discovered successfully");
             } else {
                 Log.d(TAG, "The method 'onServicesDiscovered' received: " + status);
             }
@@ -167,7 +172,6 @@ public class BluetoothLowEnergyService extends Service {
 
         }
 
-
         sendBroadcast(intent);
     }
 
@@ -177,6 +181,12 @@ public class BluetoothLowEnergyService extends Service {
 
         // If we get killed, after returning from here, restart
         return START_STICKY;
+    }
+
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "SERVICE ONDESTROY");
     }
 
 
@@ -208,7 +218,7 @@ public class BluetoothLowEnergyService extends Service {
     public boolean initialize() {
 
         if (mBluetoothManager == null) {
-            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            mBluetoothManager = (BluetoothManager) getSystemService(getApplicationContext().BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {
                 Log.d(TAG, "BluetoothManager initialization failed");
                 return false;
@@ -227,13 +237,13 @@ public class BluetoothLowEnergyService extends Service {
 
     // Connecting to the GATT server of the device
     // result is returned asynchronously through BluetoothGattCallback in onConnectionStateChange()
-    public boolean connect(final String address) {
+    public boolean connect(final String address, boolean autoConnect) {
         if (mBluetoothAdapter == null || address == null) {
             Log.d(TAG, "Unspecified address or uninitialized BluetoothAdapter");
             return false;
         }
 
-        // Trying to reconnect to previously connected device
+        /*// Trying to reconnect to previously connected device
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
@@ -244,6 +254,14 @@ public class BluetoothLowEnergyService extends Service {
             } else {
                 return false;
             }
+        }*/
+
+        // Trying to reconnect to previously connected device
+        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
+                && mBluetoothGatt != null) {
+            Log.d(TAG, "!Closing old Gatt!");
+            disconnect();
+            close();
         }
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
@@ -252,12 +270,20 @@ public class BluetoothLowEnergyService extends Service {
             return false;
         }
 
-        // connecting to the Gatt server of device. 'autoConnect' is set to true
-        mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
-        Log.d(TAG, "Trying to create a new connection");
+        //TODO: try running all the BluetoothGatt calls on the main thread! = success
+        mHandler.post(new Runnable(){
+            @Override
+            public void run() {
+                // connecting to the Gatt server of device. 'autoConnect' is set to true
+                Log.d(TAG, "Trying to create a new connection to the Gatt server");
+                mBluetoothGatt = device.connectGatt(getApplicationContext(), autoConnect, mGattCallback);
 
-        mBluetoothDeviceAddress = address;
-        mConnectionState = STATE_CONNECTING;
+                mBluetoothDeviceAddress = address;
+                mConnectionState = STATE_CONNECTING;
+
+            }
+        });
+
         return true;
     }
 
@@ -266,20 +292,38 @@ public class BluetoothLowEnergyService extends Service {
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.d(TAG, "BluetoothAdapter is not initialized");
-            return;
+        } else {
+            mHandler.post(new Runnable(){
+                @Override
+                public void run() {
+                    try {
+                        Log.d(TAG, "Disconnecting from the device");
+                        mBluetoothGatt.disconnect();
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
-        mBluetoothGatt.disconnect();
     }
 
     // releasing resources
     public void close() {
         if (mBluetoothGatt == null) {
-            return;
+        } else {
+
+            mHandler.post(new Runnable(){
+                @Override
+                public void run() {
+                    try {
+                        mBluetoothGatt.close();
+                        mBluetoothGatt = null;
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
-        Log.d(TAG, "Closing BluetoothGatt");
-        disconnect();
-        mBluetoothGatt.close();
-        mBluetoothGatt = null;
     }
 
     // requesting to read characteristic
@@ -289,7 +333,18 @@ public class BluetoothLowEnergyService extends Service {
             Log.d(TAG, "BluetoothAdapter is not initialized");
             return;
         }
-        mBluetoothGatt.readCharacteristic(characteristic);
+
+        mHandler.post(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "READING CHARACTERISTIC");
+                    mBluetoothGatt.readCharacteristic(characteristic);
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     // enabling notification for the characteristic with sensors' data
@@ -300,13 +355,25 @@ public class BluetoothLowEnergyService extends Service {
             return;
         }
 
-        mBluetoothGatt.setCharacteristicNotification(characteristic, enable);
+        mHandler.post(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "ENABLING CHARACTERISTIC NOTIFICATION");
 
-        if(enable) {
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            mBluetoothGatt.writeDescriptor(descriptor);
-        }
+                    mBluetoothGatt.setCharacteristicNotification(characteristic, enable);
+
+                    if(enable) {
+                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        mBluetoothGatt.writeDescriptor(descriptor);
+                    }
+
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
     }
 

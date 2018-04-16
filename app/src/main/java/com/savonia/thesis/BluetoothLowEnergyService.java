@@ -108,7 +108,7 @@ public class BluetoothLowEnergyService extends Service {
                         public void run() {
                             connect(mBluetoothDeviceAddress, true);
                         }
-                    }, 11000);
+                    }, 1000);
                 }
 
                 broadcastUpdate(intentAction);
@@ -122,22 +122,6 @@ public class BluetoothLowEnergyService extends Service {
                 Log.d(TAG, "Services discovered successfully");
             } else {
                 Log.d(TAG, "The method 'onServicesDiscovered' received: " + status);
-                if(status == 129) {
-                    if(mBluetoothAdapter != null)
-                        mBluetoothAdapter.cancelDiscovery();
-
-                    mHandler.postDelayed(new Runnable() {
-                     @Override
-                     public void run() {
-                         try {
-                             if(mBluetoothGatt != null && mBluetoothAdapter !=null)
-                                 mBluetoothGatt.discoverServices();
-                         } catch (NullPointerException ex) {
-                             ex.printStackTrace();
-                         }
-                     }
-                 }, 60);
-                }
             }
         }
 
@@ -316,10 +300,10 @@ public class BluetoothLowEnergyService extends Service {
                     Log.d(TAG, "Trying to create a new connection to the Gatt server");
                     mBluetoothGatt = device.connectGatt(getApplicationContext(), autoConnect,
                             mGattCallback, BluetoothDevice.TRANSPORT_LE);
-                    mBluetoothGatt.connect();
 
                     mBluetoothDeviceAddress = address;
                     mConnectionState = STATE_CONNECTING;
+                    mBluetoothGatt.connect();
                 } catch(Exception ex) {
                     ex.printStackTrace();
                 }
@@ -409,9 +393,9 @@ public class BluetoothLowEnergyService extends Service {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "ENABLING CHARACTERISTIC NOTIFICATION");
                     try {
                         if(mBluetoothGatt != null && mBluetoothAdapter.isEnabled()) {
+                            Log.d(TAG, "ENABLING CHARACTERISTIC NOTIFICATION");
                             Boolean notificationStatus = mBluetoothGatt.setCharacteristicNotification(characteristic, enable);
 
                             if (!notificationStatus) {
@@ -421,15 +405,29 @@ public class BluetoothLowEnergyService extends Service {
 
                             sensorsDataCharacteristic = characteristic;
 
-                            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            mBluetoothGatt.writeDescriptor(descriptor);
+                            mHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.d(TAG, "WRITING NOTIFICATION DESCRIPTOR");
+                                    try {
+                                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+                                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                                        if (mBluetoothGatt != null) {
+                                            mBluetoothGatt.writeDescriptor(descriptor);
+                                        }
+                                    } catch (Exception ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                            }, 100);
+
                         }
                     } catch(Exception ex) {
                         ex.printStackTrace();
                     }
                 }
-            }, 200);
+            }, 100);
+
         } else
             if (sensorsDataCharacteristic != null) {
             mHandler.post(new Runnable() {
@@ -444,12 +442,20 @@ public class BluetoothLowEnergyService extends Service {
                             Log.d(TAG, "disabling notification failed!");
                             return;
                         }
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+                                    descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                                    mBluetoothGatt.writeDescriptor(descriptor);
 
-                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
-                        descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                        mBluetoothGatt.writeDescriptor(descriptor);
-
-                        sensorsDataCharacteristic = null;
+                                    sensorsDataCharacteristic = null;
+                                } catch(Exception exc) {
+                                        exc.printStackTrace();
+                                    }
+                            }
+                        }, 20);
 
                     } catch(Exception ex) {
                         ex.printStackTrace();

@@ -89,16 +89,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private final static String DEVICE_STATE = "DeviceConnection";
     private final static String BOUND_STATE = "BindingState";
     private final static String RECEIVED_SERVICES = "ServicesReceived";
-    private final static String BLE_STATE_CHANGE = "BleChangedState";
     private final static String RECEIVING_DATA = "ReceivingData";
-
-    private SimpleDateFormat mDateFormatter;
+    private final static String CONNECTION_TYPE = "ConnectionType";
 
     private BluetoothAdapter mBluetoothAdapter;
-
-    private ExpandableListAdapter listAdapter;
-    private List<String> servicesList;
-    private HashMap<String, List<String>> characteristicsList;
 
     private Toolbar toolBar;
 
@@ -116,7 +110,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private boolean isServiceBound = false;
     private boolean hasReceivedServices = false;
     private boolean isReceivingData = false;
-    private boolean bleHasBeenDisabled = false;
+    private boolean shouldAutoConnect = false;
 
     private String deviceAddress;
     private ServicesFragment servicesFragment;
@@ -136,7 +130,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         savedInstanceState.putBoolean(RECEIVED_SERVICES, hasReceivedServices);
         savedInstanceState.putBoolean(RECEIVING_DATA, isReceivingData);
         savedInstanceState.putBoolean(BOUND_STATE, isServiceBound);
-        savedInstanceState.putBoolean(BLE_STATE_CHANGE, bleHasBeenDisabled);
+        savedInstanceState.putBoolean(CONNECTION_TYPE, shouldAutoConnect);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
@@ -161,8 +155,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             }
 
             if(!isDeviceConnected) {
-                Log.d(TAG, "WITH AUTOCONNECT");
-                mBluetoothLEService.connect(deviceAddress, true);
+                // Connecting directly for the first time and then reconnecting with autoConnect
+                // solves unstable connection sometimes
+                if(shouldAutoConnect)
+                    Log.d(TAG, "WITH AUTOCONNECT");
+                else
+                    Log.d(TAG, "WITHOUT AUTOCONNECT");
+
+                mBluetoothLEService.connect(deviceAddress, shouldAutoConnect);
+                shouldAutoConnect = true;
             }
         }
 
@@ -178,6 +179,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             isServiceBound = false;
 
             mBluetoothLEService = null;
+            shouldAutoConnect = false;
             isDeviceConnected = false;
             isReceivingData = false;
             hasReceivedServices = false;
@@ -200,19 +202,16 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
                             Log.i(TAG, "Turning Bluetooth off");
-                            bleHasBeenDisabled = true;
                             clearConnectionToDevice();
                             break;
                         case BluetoothAdapter.STATE_ON:
                             Log.i(TAG, "Bluetooth on");
-                            Handler mHandler = new Handler(Looper.getMainLooper());
-                            mHandler.postDelayed(new Runnable() {
+                            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    bleHasBeenDisabled = false;
                                     establishConnectionToDevice();
                                 }
-                            }, 4000);
+                            }, 7000);
                             break;
                         case BluetoothAdapter.STATE_TURNING_ON:
                             Log.i(TAG, "Turning Bluetooth on");
@@ -296,10 +295,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             hasReceivedServices = savedInstanceState.getBoolean(RECEIVED_SERVICES);
             isReceivingData = savedInstanceState.getBoolean(RECEIVING_DATA);
             isServiceBound = savedInstanceState.getBoolean(BOUND_STATE);
-            bleHasBeenDisabled = savedInstanceState.getBoolean(BLE_STATE_CHANGE);
+            shouldAutoConnect = savedInstanceState.getBoolean(CONNECTION_TYPE);
         } else {
+            shouldAutoConnect = false;
             isReceivingData = false;
-            bleHasBeenDisabled = false;
             isDeviceConnected = false;
             hasReceivedServices = false;
             isServiceBound = false;
@@ -369,9 +368,17 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         registerReceiver(bluetoothStateReceiver, bleStateFilter);
         // after switching bluetooth adapter off and turning it on again
         // the app should wait for 25 seconds
-        if(!bleHasBeenDisabled) {
-            establishConnectionToDevice();
-        }
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    establishConnectionToDevice();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }, 600);
+
     }
 
 
@@ -434,7 +441,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                     getApplicationContext().stopService(stoppingServiceIntent);
                     mBluetoothLEService = null;
                 }
-            }, 230);
+            }, 200);
 
         }
     }
@@ -584,7 +591,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu
@@ -652,14 +658,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             if(servicesFragment.isResumed())
                 servicesFragment.setConnectionState(connectionState, hasReceivedServices);
     }
-
-
-    /*private void displaySensorsData(String data) {
-        if (data != null) {
-            Toast.makeText(LeConnectedDeviceActivity.this, "Broadcasted data: " + data,
-                    Toast.LENGTH_SHORT).show();
-        }
-    }*/
 
 
     private void displayGattServices(List<BluetoothGattService> gattServices) {

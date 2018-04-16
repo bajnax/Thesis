@@ -18,6 +18,7 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -84,14 +85,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private final static String TAG = LeConnectedDeviceActivity.class.getSimpleName();
 
     private final static int REQUEST_ENABLE_BT = 1;
+    private final static int REQUEST_ENABLE_LS = 2;
     private final static String DEVICE_STATE = "DeviceConnection";
     private final static String BOUND_STATE = "BindingState";
     private final static String RECEIVED_SERVICES = "ServicesReceived";
-    private final static String CONNECTION_TYPE = "AutoconnectionOrDirect";
+    private final static String BLE_STATE_CHANGE = "BleChangedState";
     private final static String RECEIVING_DATA = "ReceivingData";
-
-    private final static int REQUEST_ENABLE_LS = 3;
-    private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
 
     private SimpleDateFormat mDateFormatter;
 
@@ -113,11 +112,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private BluetoothLowEnergyService mBluetoothLEService;
 
     // used to check if services had been already received
-    private boolean isDeviceConnected;
-    private boolean isServiceBound;
-    private boolean hasReceivedServices;
-    private boolean isReceivingData;
-    private boolean isDirectlyConnected;
+    private boolean isDeviceConnected = false;
+    private boolean isServiceBound = false;
+    private boolean hasReceivedServices = false;
+    private boolean isReceivingData = false;
+    private boolean bleHasBeenDisabled = false;
 
     private String deviceAddress;
     private ServicesFragment servicesFragment;
@@ -137,7 +136,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         savedInstanceState.putBoolean(RECEIVED_SERVICES, hasReceivedServices);
         savedInstanceState.putBoolean(RECEIVING_DATA, isReceivingData);
         savedInstanceState.putBoolean(BOUND_STATE, isServiceBound);
-        savedInstanceState.putBoolean(CONNECTION_TYPE, isDirectlyConnected);
+        savedInstanceState.putBoolean(BLE_STATE_CHANGE, bleHasBeenDisabled);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
@@ -151,6 +150,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             Log.d(TAG, "ON SERVICE CONNECTED");
             isServiceBound = true;
+            registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
 
             // receiving a singleton entity of the BluetoothLowEnergyService from via IBinder
             mBluetoothLEService = ((BluetoothLowEnergyService.LocalBinder) service).getService();
@@ -161,19 +161,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             }
 
             if(!isDeviceConnected) {
-                Log.d(TAG, "WITHOUT AUTOCONNECT");
-                isDirectlyConnected = true;
-                mBluetoothLEService.connect(deviceAddress, false);
-            } else {
-
-                // direct connection is closed and new autoConnection is opened
-                if(isDirectlyConnected || !hasReceivedServices || !isReceivingData) {
-                    Log.d(TAG, "AUTOCONNECT");
-                    isDirectlyConnected = false;
-                    hasReceivedServices = false;
-                    isReceivingData = false;
-                    mBluetoothLEService.connect(deviceAddress, true);
-                }
+                Log.d(TAG, "WITH AUTOCONNECT");
+                mBluetoothLEService.connect(deviceAddress, true);
             }
         }
 
@@ -190,17 +179,53 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
             mBluetoothLEService = null;
             isDeviceConnected = false;
-            isDirectlyConnected = false;
             isReceivingData = false;
             hasReceivedServices = false;
+        }
+    };
 
-            if (!mBluetoothAdapter.enable()) {
-                // Enabling BLE, if it is disabled
-                Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+
+    private final BroadcastReceiver bluetoothStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            try {
+                if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                            BluetoothAdapter.ERROR);
+                    switch (state) {
+                        case BluetoothAdapter.STATE_OFF: {
+                            Log.i(TAG, "Bluetooth off");
+                        }
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_OFF:
+                            Log.i(TAG, "Turning Bluetooth off");
+                            bleHasBeenDisabled = true;
+                            clearConnectionToDevice();
+                            break;
+                        case BluetoothAdapter.STATE_ON:
+                            Log.i(TAG, "Bluetooth on");
+                            Handler mHandler = new Handler(Looper.getMainLooper());
+                            mHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    bleHasBeenDisabled = false;
+                                    establishConnectionToDevice();
+                                }
+                            }, 4000);
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_ON:
+                            Log.i(TAG, "Turning Bluetooth on");
+                            break;
+                    }
+                }
+            } catch (NullPointerException ex) {
+                ex.printStackTrace();
             }
         }
     };
+
+    private static IntentFilter bleStateFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 
     
     // Events broadcasted by the service
@@ -221,7 +246,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                 setConnectionState(0);
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                //isReceivingData = false;
+                isDeviceConnected = false;
                 invalidateOptionsMenu();
 
                 // Setting up the servicesFragment' connection state
@@ -271,10 +296,10 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             hasReceivedServices = savedInstanceState.getBoolean(RECEIVED_SERVICES);
             isReceivingData = savedInstanceState.getBoolean(RECEIVING_DATA);
             isServiceBound = savedInstanceState.getBoolean(BOUND_STATE);
-            isDirectlyConnected = savedInstanceState.getBoolean(CONNECTION_TYPE);
+            bleHasBeenDisabled = savedInstanceState.getBoolean(BLE_STATE_CHANGE);
         } else {
             isReceivingData = false;
-            isDirectlyConnected = false;
+            bleHasBeenDisabled = false;
             isDeviceConnected = false;
             hasReceivedServices = false;
             isServiceBound = false;
@@ -341,7 +366,80 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver(bluetoothStateReceiver, bleStateFilter);
+        // after switching bluetooth adapter off and turning it on again
+        // the app should wait for 25 seconds
+        if(!bleHasBeenDisabled) {
+            establishConnectionToDevice();
+        }
+    }
 
+
+    /* It is also important that you use onStop() to release resources that might leak memory,
+        because it is possible for the system to kill the process hosting your activity without
+        calling the activity's final onDestroy() callback*/
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        unregisterReceiver(bluetoothStateReceiver);
+
+        if (!isChangingConfigurations()) {
+            Log.d(TAG, "ACTIVITY ONSTOP");
+            clearConnectionToDevice();
+        } else {
+            // service keeps running, but the activity unbinds on configuration changes
+            if(isServiceBound) {
+                Log.d(TAG, "UNBINDING ON ONSTOP");
+                unregisterReceiver(mGattUpdateReceiver);
+                unbindService(mServiceConnection);
+                isServiceBound = false;
+            }
+        }
+
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+
+    private void clearConnectionToDevice() {
+        if(isServiceBound) {
+            unregisterReceiver(mGattUpdateReceiver);
+            unbindService(mServiceConnection);
+        }
+        isServiceBound = false;
+        isReceivingData = false;
+        isDeviceConnected = false;
+        hasReceivedServices = false;
+
+        if(mBluetoothLEService != null) {
+            Log.d(TAG, "disconnecting, then closing gatt and service");
+            mBluetoothLEService.disconnect();
+            mBluetoothLEService.close();
+
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
+                    getApplicationContext().stopService(stoppingServiceIntent);
+                    mBluetoothLEService = null;
+                }
+            }, 230);
+
+        }
+    }
+
+    private void establishConnectionToDevice() {
         if (!mBluetoothAdapter.enable()) {
             // Enabling BLE, if it is disabled
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -359,54 +457,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         getApplicationContext().startService(gattServiceIntent);
         // service clients are able to bind to it at any time
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-        Log.d(TAG, "BINDING ON RESUME");
-        registerReceiver(mGattUpdateReceiver, GattUpdateIntentFilter());
-
-    }
-
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (isFinishing()) {
-            unregisterReceiver(mGattUpdateReceiver);
-
-            Log.d(TAG, "ACTIVITY ONDESTROY");
-
-            if(isServiceBound)
-                unbindService(mServiceConnection);
-
-            if(mBluetoothLEService != null) {
-                mBluetoothLEService.disconnect();
-                mBluetoothLEService.close();
-            }
-
-            Intent stoppingServiceIntent = new Intent(getApplicationContext(), BluetoothLowEnergyService.class);
-            getApplicationContext().stopService(stoppingServiceIntent);
-            mBluetoothLEService = null;
-        } else {
-
-            // service keeps running, but the activity unbinds on configuration changes
-            if(isServiceBound) {
-                Log.d(TAG, "UNBINDING ON DESTROY");
-                unregisterReceiver(mGattUpdateReceiver);
-                unbindService(mServiceConnection);
-                isServiceBound = false;
-            }
-        }
+        Log.d(TAG, "BINDING in activity");
     }
 
 
@@ -630,8 +681,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                     if (currentGattCharacteristic != null) {
                         characteristicUuid = currentGattCharacteristic.getUuid().toString();
 
-
-                        //TODO: sometimes the app does not reach this point. Probably, not all the services are received!
                         // enabling notification for the characteristics with the sensors' data
                         if(serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)
                                 && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {

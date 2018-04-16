@@ -59,7 +59,7 @@ public class LeScanActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_ENABLE_LS = 3;
     private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
-    private final static long SCAN_PERIOD = 3000;
+    private final static long SCAN_PERIOD = 8000;
 
     private Handler mHandler;
     private BluetoothAdapter mBluetoothAdapter;
@@ -107,9 +107,7 @@ public class LeScanActivity extends AppCompatActivity {
         lookUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isScanning)
-                    scanLeDevice(false);
-                else
+                if(!isScanning)
                     scanLeDevice(true);
             }
         });
@@ -120,12 +118,17 @@ public class LeScanActivity extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
             finish();
         } else {
-            // Initializing Bluetooth adapter.
-            final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            mBluetoothAdapter = bluetoothManager.getAdapter();
+            try {
+                // Initializing Bluetooth adapter.
+                final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+                if (bluetoothManager != null)
+                    mBluetoothAdapter = bluetoothManager.getAdapter();
 
-            // Initializing location manager
-            mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+                // Initializing location manager
+                mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+            } catch(NullPointerException ex) {
+                ex.printStackTrace();
+            }
 
             // Enabling Bluetooth, if it is disabled
             checkBluetooth();
@@ -153,13 +156,7 @@ public class LeScanActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        if(isScanning) {
-            menu.findItem(R.id.action_refresh).setVisible(false);
-            menu.findItem(R.id.action_pause_scanning).setVisible(true);
-        } else {
             menu.findItem(R.id.action_refresh).setVisible(true);
-            menu.findItem(R.id.action_pause_scanning).setVisible(false);
-        }
         return true;
     }
 
@@ -175,13 +172,9 @@ public class LeScanActivity extends AppCompatActivity {
                         mLeDeviceListAdapter.notifyDataSetChanged();
                     }
                 });
-                scanLeDevice(true);
 
-                return true;
-            }
-            case R.id.action_pause_scanning: {
-                if(isScanning)
-                    scanLeDevice(false);
+                if(!isScanning)
+                    scanLeDevice(true);
 
                 return true;
             }
@@ -214,13 +207,12 @@ public class LeScanActivity extends AppCompatActivity {
 
     private void startScanning() {
 
-        // if the listView is empty, then layout with 'stop' button,
-        // spinner and textView becomes visible
+        // if the listView is empty, then layout with
+        // spinner and textView becomes visible, the button becomes gone
         if(mLeDeviceListAdapter.getCount() == 0) {
             invalidateOptionsMenu();
 
-            lookUp.setVisibility(View.VISIBLE);
-            lookUp.setText(R.string.stop_look_up_btn_txt);
+            lookUp.setVisibility(View.INVISIBLE);
             lookUpText.setVisibility(View.VISIBLE);
             lookUpText.setText(getResources().getString(R.string.look_up_text_view_scanning));
         }
@@ -240,12 +232,8 @@ public class LeScanActivity extends AppCompatActivity {
             invalidateOptionsMenu();
 
             lookUp.setVisibility(View.VISIBLE);
-            lookUp.setText(R.string.look_up_btn_txt);
             lookUpText.setVisibility(View.VISIBLE);
             lookUpText.setText(getResources().getString(R.string.look_up_text_view_initial));
-        } else {
-            // if any devices are found, the toolbar icon 'refresh' is shown
-            invalidateOptionsMenu();
         }
 
         // noticeable changes of the scanning status in the layout
@@ -255,9 +243,8 @@ public class LeScanActivity extends AppCompatActivity {
 
     // in case any devices are found
     private void scanFinished() {
-        lookUp.setText(R.string.look_up_btn_txt);
-        lookUp.setVisibility(View.GONE);
-        lookUpText.setVisibility(View.GONE);
+        lookUp.setVisibility(View.INVISIBLE);
+        lookUpText.setVisibility(View.INVISIBLE);
         invalidateOptionsMenu();
 
         // listView with devices shows up
@@ -275,23 +262,24 @@ public class LeScanActivity extends AppCompatActivity {
 
             if (enable) {
 
-                // the user can manually invoke a search for BLE devices
+                if(!isScanning) {
 
-               /* mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(isScanning) {
-                            isScanning = false;
-                            bluetoothLeScanner.stopScan(myLeScanCallback);
-                            stopScanning();
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isScanning) {
+                                isScanning = false;
+                                bluetoothLeScanner.stopScan(myLeScanCallback);
+                                stopScanning();
+                            }
                         }
-                    }
-                }, SCAN_PERIOD);*/
+                    }, SCAN_PERIOD);
 
 
-                bluetoothLeScanner.startScan(myLeScanCallback);
-                isScanning = true;
-                startScanning();
+                    bluetoothLeScanner.startScan(myLeScanCallback);
+                    isScanning = true;
+                    startScanning();
+                }
 
             } else {
                 bluetoothLeScanner.stopScan(myLeScanCallback);

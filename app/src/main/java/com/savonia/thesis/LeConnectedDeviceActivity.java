@@ -253,7 +253,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 hasReceivedServices = true;
-                displayGattServices(mBluetoothLEService.getSupportedGattServices());
                 // Setting up the servicesFragment' connection state
                 setConnectionState(2);
 
@@ -263,8 +262,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                     isReceivingData = true;
                     invalidateOptionsMenu();
                 }
-
-                //displaySensorsData(intent.getStringExtra(BluetoothLowEnergyService.EXTRA_DATA));
 
                 // Setting up the servicesFragment' connection state
                 setConnectionState(3);
@@ -354,6 +351,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         }
 
     }
+
 
     // might be used to receive messages from fragments
     @Override
@@ -494,7 +492,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     }
 
 
-    // TODO: put location related alert in a separate file with application context and call it from both activities if needed
     private boolean isAccessFineLocationAllowed() {
         if (ContextCompat.checkSelfPermission(LeConnectedDeviceActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -649,7 +646,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         popup.show();
     }
 
-
     private void setConnectionState(int connectionState) {
         String tag = pagerAdapter.getServicesFragmentTag();
         servicesFragment = (ServicesFragment) getSupportFragmentManager().findFragmentByTag(tag);
@@ -658,48 +654,5 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             if(servicesFragment.isResumed())
                 servicesFragment.setConnectionState(connectionState, hasReceivedServices);
     }
-
-
-    private void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null)
-            return;
-        String characteristicUuid;
-        String serviceUuid;
-
-        for (BluetoothGattService currentGattService : gattServices) {
-
-            // searching through characteristics of the service with sensors' data
-            if (currentGattService != null) {
-                serviceUuid = currentGattService.getUuid().toString();
-                List<BluetoothGattCharacteristic> gattCharacteristics = currentGattService.getCharacteristics();
-
-                for (BluetoothGattCharacteristic currentGattCharacteristic : gattCharacteristics) {
-
-                    // reading characteristics
-                    if (currentGattCharacteristic != null) {
-                        characteristicUuid = currentGattCharacteristic.getUuid().toString();
-
-                        // enabling notification for the characteristics with the sensors' data
-                        if(serviceUuid.equals(GattAttributesSample.UUID_SENSORS_SERVICE)
-                                && characteristicUuid.equals(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC)) {
-                            Log.d(TAG, "Service: " + serviceUuid + ", \nCharacteristic: " + characteristicUuid);
-
-                            mNotifyCharacteristic = currentGattCharacteristic;
-                            // setting notification for the current characteristic
-                            // to broadcast changes automatically
-                            final int characteristicProperties = mNotifyCharacteristic.getProperties();
-                            if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                                mBluetoothLEService.readCharacteristic(mNotifyCharacteristic);
-                            }
-                            if ((characteristicProperties | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                                mBluetoothLEService.enableCharacteristicNotification(mNotifyCharacteristic, true);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
 
 }

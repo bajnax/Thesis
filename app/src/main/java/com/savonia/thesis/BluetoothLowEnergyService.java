@@ -28,6 +28,7 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class BluetoothLowEnergyService extends Service {
+
     private final static String TAG = BluetoothLowEnergyService.class.getSimpleName();
 
     private Handler mHandler = new Handler(Looper.getMainLooper());
@@ -39,19 +40,10 @@ public class BluetoothLowEnergyService extends Service {
     private Boolean success;
     private int mConnectionState = STATE_DISCONNECTED;
 
-
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
-    private static final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = convertFromInteger(0x2902);
 
-
-    private static UUID convertFromInteger(int i) {
-        final long MSB = 0x0000000000001000L;
-        final long LSB = 0x800000805f9b34fbL;
-        long value = i & 0xFFFFFFFF;
-        return new UUID(MSB | (value << 32), LSB);
-    }
 
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -78,6 +70,7 @@ public class BluetoothLowEnergyService extends Service {
 
                 if(mBluetoothAdapter != null)
                     mBluetoothAdapter.cancelDiscovery();
+
                 // Attempts to discover services after successful connection.
                 // waiting for 1 second after connection to overcome status 129
                 mHandler.postDelayed(new Runnable(){
@@ -101,14 +94,7 @@ public class BluetoothLowEnergyService extends Service {
 
                 // brute forcing to connect in case of infamous status 133
                 if(status == 133) {
-                    disconnect();
-                    close();
-                    mHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            connect(mBluetoothDeviceAddress, true);
-                        }
-                    }, 1000);
+                    reConnect(25000, false);
                 }
 
                 broadcastUpdate(intentAction);
@@ -120,8 +106,37 @@ public class BluetoothLowEnergyService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
                 Log.d(TAG, "Services discovered successfully");
+
+
+                // enabling notification for the characteristic with measurements
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (mBluetoothGatt != null && mBluetoothAdapter != null) {
+                                BluetoothGattService sensorsService = mBluetoothGatt.getService(UUID.fromString(GattAttributesSample.UUID_SENSORS_SERVICE));
+                                if (sensorsService != null) {
+                                    BluetoothGattCharacteristic characteristic =
+                                            sensorsService.getCharacteristic(UUID.fromString(GattAttributesSample.UUID_SENSORS_CHARACTERISTIC));
+                                    if (characteristic != null) {
+                                        enableCharacteristicNotification(characteristic, true);
+                                        readCharacteristic(characteristic);
+                                    } else if((mBluetoothGatt != null && mBluetoothAdapter != null)) {
+                                        reConnect(5000, true);
+                                    }
+                                } else
+                                    reConnect(5000, false);
+                            }
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
             } else {
                 Log.d(TAG, "The method 'onServicesDiscovered' received: " + status);
+
+                reConnect(5000, false);
             }
         }
 
@@ -131,10 +146,11 @@ public class BluetoothLowEnergyService extends Service {
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                Log.d(TAG, "onCharacteristicRead");
             } else {
                 Log.d(TAG, "The method 'onCharacteristicRead' received: " + status);
+                reConnect(3000, false);
             }
-
         }
 
         // invokes broadcast when notified about any changes in characteristic
@@ -142,7 +158,9 @@ public class BluetoothLowEnergyService extends Service {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            Log.d(TAG, "onCharacteristicChanged");
         }
+
     };
 
     private void broadcastUpdate(final String action) {
@@ -184,7 +202,6 @@ public class BluetoothLowEnergyService extends Service {
                     value = value.trim();
 
                     double gasValue = Double.parseDouble(value);
-
                     Gas gas = new Gas(gasValue);
                     CentralRepository.getInstance(SensorsValuesDatabase.getDatabase(getApplicationContext())).insertGas(gas);
                 }catch (Exception e){
@@ -197,10 +214,10 @@ public class BluetoothLowEnergyService extends Service {
         sendBroadcast(intent);
     }
 
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-       // Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
-
+       Log.d(TAG, "SERVICE ONSTARTCOMMAND");
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
@@ -368,18 +385,25 @@ public class BluetoothLowEnergyService extends Service {
             return;
         }
 
-        mHandler.post(new Runnable(){
+
+        mHandler.postDelayed(new Runnable(){
             @Override
             public void run() {
                 try {
-                    Log.d(TAG, "READING CHARACTERISTIC");
-                    mBluetoothGatt.readCharacteristic(characteristic);
+                    if (mBluetoothGatt != null && mBluetoothAdapter.isEnabled()) {
+                        Log.d(TAG, "READING CHARACTERISTIC");
+                        mBluetoothGatt.readCharacteristic(characteristic);
+                    }
                 } catch(Exception e) {
                     e.printStackTrace();
                 }
             }
-        });
+        }, 100);
+
+
+        // TODO: !set a timer that checks if no data is available after 15 seconds of subscription. In such case, reConnect!
     }
+
 
     // enabling notification for the characteristic with sensors' data
     public void enableCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
@@ -390,7 +414,7 @@ public class BluetoothLowEnergyService extends Service {
         }
 
         if(enable) {
-            mHandler.postDelayed(new Runnable() {
+            mHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -408,28 +432,28 @@ public class BluetoothLowEnergyService extends Service {
                             mHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.d(TAG, "WRITING NOTIFICATION DESCRIPTOR");
                                     try {
-                                        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+                                        BluetoothGattDescriptor descriptor =
+                                                characteristic.getDescriptor(UUID.fromString(GattAttributesSample.CLIENT_CHARACTERISTIC_CONFIG));
                                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                                        if (mBluetoothGatt != null) {
+                                        if (mBluetoothGatt != null && mBluetoothAdapter.isEnabled()) {
+                                            Log.d(TAG, "WRITING NOTIFICATION DESCRIPTOR");
                                             mBluetoothGatt.writeDescriptor(descriptor);
                                         }
                                     } catch (Exception ex) {
                                         ex.printStackTrace();
                                     }
                                 }
-                            }, 100);
+                            }, 50);
 
                         }
                     } catch(Exception ex) {
                         ex.printStackTrace();
                     }
                 }
-            }, 100);
+            });
 
-        } else
-            if (sensorsDataCharacteristic != null) {
+        } else if(sensorsDataCharacteristic != null) {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -446,7 +470,8 @@ public class BluetoothLowEnergyService extends Service {
                             @Override
                             public void run() {
                                 try {
-                                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+                                    BluetoothGattDescriptor descriptor =
+                                            characteristic.getDescriptor(UUID.fromString(GattAttributesSample.CLIENT_CHARACTERISTIC_CONFIG));
                                     descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
                                     mBluetoothGatt.writeDescriptor(descriptor);
 
@@ -465,13 +490,16 @@ public class BluetoothLowEnergyService extends Service {
         }
     }
 
-    // when gattServices are discovered, this method
-    // retrieves a list of the services, which are available on the device
-    public List<BluetoothGattService> getSupportedGattServices() {
-        if (mBluetoothGatt == null)
-            return null;
 
-        return mBluetoothGatt.getServices();
+    public void reConnect(int delay, Boolean autoConnect) {
+        disconnect();
+        close();
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                connect(mBluetoothDeviceAddress, autoConnect);
+            }
+        }, delay);
     }
 
 }

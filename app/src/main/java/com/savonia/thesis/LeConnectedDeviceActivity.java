@@ -246,6 +246,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 isDeviceConnected = false;
+                shouldAutoConnect = false;
                 invalidateOptionsMenu();
 
                 // Setting up the servicesFragment' connection state
@@ -429,6 +430,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
         if(mBluetoothLEService != null) {
             Log.d(TAG, "disconnecting, then closing gatt and service");
+            mBluetoothLEService.removePendingCallbacks();
             mBluetoothLEService.disconnect();
             mBluetoothLEService.close();
 
@@ -439,12 +441,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                     getApplicationContext().stopService(stoppingServiceIntent);
                     mBluetoothLEService = null;
                 }
-            }, 200);
+            }, 50);
 
         }
     }
 
     private void establishConnectionToDevice() {
+        setConnectionState(1);
+
         if (!mBluetoothAdapter.enable()) {
             // Enabling BLE, if it is disabled
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);

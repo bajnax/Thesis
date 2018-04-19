@@ -29,6 +29,7 @@
     <string name="connection_lost">Lost connection with BLE device. Trying to reconnect..</string>
     <string name="connectivity_status">Connecting..</string>
     <string name="settings">Settings</string>
+    <string name="scroll_to_end">Scroll to end</string>
 
     <string name="show_services">Display GATTs</string>
     <string name="draw_graph">Display a LiveData graph</string>

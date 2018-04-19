@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/showServices"
-        android:title="@string/draw_graph" />
-    <item android:id="@+id/showSami"
-        android:title="@string/show_sami" />
+    <item android:id="@+id/setScrollToEnd"
+        android:checkable="true"
+        android:checked="false"
+        android:buttonTint="@color/colorPrimary"
+        android:title="@string/scroll_to_end"
+        app:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/sendToSami"
+        android:title="@string/show_sami"
+        app:showAsAction="ifRoom|withText"/>
 
 </menu>

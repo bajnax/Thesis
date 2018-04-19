@@ -10,6 +10,8 @@ public class ConnectedDevicePagerAdapter extends FragmentPagerAdapter {
 
     private Context mContext;
     private String servicesFragmentTag;
+    private String temperatureFragmentTag;
+    private String gasFragmentTag;
 
     public ConnectedDevicePagerAdapter(Context context, FragmentManager fm) {
         super(fm);
@@ -38,6 +40,10 @@ public class ConnectedDevicePagerAdapter extends FragmentPagerAdapter {
         // save the appropriate reference depending on position
         if(position == 0) {
             servicesFragmentTag = createdFragment.getTag();
+        } else if(position == 1) {
+            temperatureFragmentTag = createdFragment.getTag();
+        } else if(position == 2) {
+            gasFragmentTag = createdFragment.getTag();
         }
         return createdFragment;
     }
@@ -48,7 +54,12 @@ public class ConnectedDevicePagerAdapter extends FragmentPagerAdapter {
         return 3;
     }
 
-    public String getServicesFragmentTag() {
-        return servicesFragmentTag;
+    public String getFragmentTag(int position) {
+        switch(position) {
+            case 0: return servicesFragmentTag;
+            case 1: return temperatureFragmentTag;
+            case 2: return  gasFragmentTag;
+            default: return null;
+        }
     }
 }

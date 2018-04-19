@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -19,10 +20,13 @@ import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.db.entity.Gas;
+import com.savonia.thesis.viewModels.SensorsDataViewModel;
+import com.savonia.thesis.viewModels.SharedViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -41,6 +45,7 @@ public class GasFragment extends Fragment {
     private String mParam1;
     private GraphView gasGraph;
     private View rootView;
+    private boolean isScrollToEndChecked = false;
     private PointsGraphSeries<DataPoint> gasSeries;
     private SimpleDateFormat mDateFormatter;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -79,6 +84,15 @@ public class GasFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
         setRetainInstance(true);
+
+        SharedViewModel sharedViewModel= ViewModelProviders.of(getActivity()).get(SharedViewModel.class);
+
+        sharedViewModel.getScrollToEnd().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@NonNull Boolean scrollToEnd) {
+                isScrollToEndChecked = scrollToEnd;
+            }
+        });
     }
 
     @Override
@@ -86,10 +100,8 @@ public class GasFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_gas, container, false);
-
-
         gasGraph = (GraphView) rootView.findViewById(R.id.gasGraph);
-        mDateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss");
+        mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
         gasGraph.setTitle("Current sensor\'s data");
         gasGraph.setTitleColor(R.color.colorPrimaryDark);
@@ -97,10 +109,10 @@ public class GasFragment extends Fragment {
         gasGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
         // enabling horizontal zooming and scrolling
-        gasGraph.getViewport().setScalable(true);
+        gasGraph.getViewport().setScrollable(true);
 
-        gasGraph.getGridLabelRenderer().setLabelVerticalWidth(75);
-        gasGraph.getGridLabelRenderer().setLabelHorizontalHeight(75);
+        gasGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
+        gasGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
 
         gasGraph.getViewport().setYAxisBoundsManual(true);
         gasGraph.getViewport().setMinY(0);
@@ -109,7 +121,7 @@ public class GasFragment extends Fragment {
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         gasGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
-        gasGraph.getGridLabelRenderer().setNumHorizontalLabels(2); // only 2 because of the space
+        gasGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
@@ -127,6 +139,7 @@ public class GasFragment extends Fragment {
         gasSeries = new PointsGraphSeries<>();
         gasGraph.addSeries(gasSeries);
 
+        // TODO: move this part to "onCreate"
         final SensorsDataViewModel sensorsDataViewModel =
                 ViewModelProviders.of(getActivity()).get(SensorsDataViewModel.class);
 
@@ -173,21 +186,6 @@ public class GasFragment extends Fragment {
 
     private void displayGases(List<Gas> gases) {
 
-        /*mTimer2 = new Runnable()
-        {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < gases.size(); i++){
-                        Log.i(TAG, "gas timestamp: "+ gases.get(i).getTimestamp() + " and id: " + gases.get(i).getId());
-                        gasSeries.appendData(new DataPoint(gases.get(i).getTimestamp(), gases.get(i).getGasValue()), false, 1000);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };*/
-
         mTimer2 = new Runnable()
         {
             @Override
@@ -220,7 +218,7 @@ public class GasFragment extends Fragment {
             {
                 try {
                     Log.i(TAG, "gas timestamp: " + gas.getTimestamp() + " and id: " + gas.getId());
-                    gasSeries.appendData(new DataPoint(gas.getTimestamp(), gas.getGasValue()), false, 1000);
+                    gasSeries.appendData(new DataPoint(gas.getTimestamp(), gas.getGasValue()), isScrollToEndChecked, 1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

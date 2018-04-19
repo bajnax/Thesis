@@ -1,10 +1,14 @@
 package com.savonia.thesis;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.savonia.thesis.viewModels.SharedViewModel;
 
 
 /**
@@ -64,6 +70,7 @@ public class ServicesFragment extends Fragment {
         return fragment;
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +81,25 @@ public class ServicesFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
         setRetainInstance(true);
+
+        SharedViewModel sharedViewModel= ViewModelProviders.of(getActivity()).get(SharedViewModel.class);
+
+        sharedViewModel.getConnectionState().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(@NonNull Integer connectState) {
+                connectionState = connectState;
+                setConnectionState(connectionState, hasReceivedServices);
+            }
+        });
+        sharedViewModel.getHasReceivedServices().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@NonNull Boolean servicesStatus) {
+                hasReceivedServices = servicesStatus;
+                setConnectionState(connectionState, hasReceivedServices);
+            }
+        });
     }
+
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -170,6 +195,7 @@ public class ServicesFragment extends Fragment {
 
     }
 
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -181,16 +207,11 @@ public class ServicesFragment extends Fragment {
         }
     }
 
+
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
     }
 
-    /**
-     * The interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     */
 }

@@ -1,14 +1,10 @@
 package com.savonia.thesis;
 
 import android.Manifest;
-import android.animation.LayoutTransition;
-import android.app.ActivityManager;
-import android.app.Service;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -18,37 +14,20 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.graphics.PorterDuff;
-import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.TranslateAnimation;
-import android.widget.Button;
-import android.widget.ExpandableListAdapter;
-import android.widget.ExpandableListView;
 import android.widget.PopupMenu;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -61,24 +40,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.jjoe64.graphview.DefaultLabelFormatter;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GridLabelRenderer;
-import com.jjoe64.graphview.LabelFormatter;
-import com.jjoe64.graphview.Viewport;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
-import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.PointsGraphSeries;
-import com.savonia.thesis.db.SensorsValuesDatabase;
-import com.savonia.thesis.db.entity.Gas;
-import com.savonia.thesis.db.entity.Temperature;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import com.savonia.thesis.viewModels.SharedViewModel;
 
 public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFragmentInteractionListener<Object> {
 
@@ -91,6 +53,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private final static String RECEIVED_SERVICES = "ServicesReceived";
     private final static String RECEIVING_DATA = "ReceivingData";
     private final static String CONNECTION_TYPE = "ConnectionType";
+    private final static String SCROLL_TO_END = "ScrollToEnd";
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -101,11 +64,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private ConnectedDevicePagerAdapter pagerAdapter;
     private TabLayout tabLayout;
 
+    private SharedViewModel sharedViewModel;
+
     private BluetoothGattCharacteristic mNotifyCharacteristic;
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
     // used to check if services had been already received
+    private boolean isScrollToEndChecked = false;
     private boolean isDeviceConnected = false;
     private boolean isServiceBound = false;
     private boolean hasReceivedServices = false;
@@ -126,6 +92,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         // Save some data
+        savedInstanceState.putBoolean(SCROLL_TO_END, isScrollToEndChecked);
         savedInstanceState.putBoolean(DEVICE_STATE, isDeviceConnected);
         savedInstanceState.putBoolean(RECEIVED_SERVICES, hasReceivedServices);
         savedInstanceState.putBoolean(RECEIVING_DATA, isReceivingData);
@@ -242,7 +209,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                 invalidateOptionsMenu();
 
                 // Setting up the servicesFragment' connection state
-                setConnectionState(0);
+                sharedViewModel.setConnectionState(0);
+                sharedViewModel.setHasReceivedServices(hasReceivedServices);
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 isDeviceConnected = false;
@@ -250,12 +218,14 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                 invalidateOptionsMenu();
 
                 // Setting up the servicesFragment' connection state
-                setConnectionState(1);
+                sharedViewModel.setConnectionState(1);
+                sharedViewModel.setHasReceivedServices(hasReceivedServices);
 
             } else if (BluetoothLowEnergyService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 hasReceivedServices = true;
                 // Setting up the servicesFragment' connection state
-                setConnectionState(2);
+                sharedViewModel.setConnectionState(2);
+                sharedViewModel.setHasReceivedServices(hasReceivedServices);
 
             } else if (BluetoothLowEnergyService.ACTION_DATA_AVAILABLE.equals(action)) {
 
@@ -265,7 +235,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                 }
 
                 // Setting up the servicesFragment' connection state
-                setConnectionState(3);
+                sharedViewModel.setConnectionState(3);
+                sharedViewModel.setHasReceivedServices(hasReceivedServices);
 
             }
         }
@@ -289,18 +260,22 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
         if (savedInstanceState != null) {
             // Restore value of members from saved state
+            isScrollToEndChecked = savedInstanceState.getBoolean(SCROLL_TO_END);
             isDeviceConnected = savedInstanceState.getBoolean(DEVICE_STATE);
             hasReceivedServices = savedInstanceState.getBoolean(RECEIVED_SERVICES);
             isReceivingData = savedInstanceState.getBoolean(RECEIVING_DATA);
             isServiceBound = savedInstanceState.getBoolean(BOUND_STATE);
             shouldAutoConnect = savedInstanceState.getBoolean(CONNECTION_TYPE);
         } else {
+            isScrollToEndChecked = false;
             shouldAutoConnect = false;
             isReceivingData = false;
             isDeviceConnected = false;
             hasReceivedServices = false;
             isServiceBound = false;
         }
+
+        sharedViewModel = ViewModelProviders.of(LeConnectedDeviceActivity.this).get(SharedViewModel.class);
 
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
@@ -428,11 +403,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         isDeviceConnected = false;
         hasReceivedServices = false;
 
+
         if(mBluetoothLEService != null) {
             Log.d(TAG, "disconnecting, then closing gatt and service");
             mBluetoothLEService.removePendingCallbacks();
             mBluetoothLEService.disconnect();
             mBluetoothLEService.close();
+
+            sharedViewModel.setConnectionState(1);
+            sharedViewModel.setHasReceivedServices(hasReceivedServices);
 
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -447,7 +426,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     }
 
     private void establishConnectionToDevice() {
-        setConnectionState(1);
 
         if (!mBluetoothAdapter.enable()) {
             // Enabling BLE, if it is disabled
@@ -596,6 +574,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu
         getMenuInflater().inflate(R.menu.connected_device_menu, menu);
+
         return true;
     }
 
@@ -626,37 +605,48 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     public void showPopup(View view) {
         PopupMenu popup = new PopupMenu(this, view);
 
-        popup.getMenuInflater()
-                .inflate(R.menu.actions, popup.getMenu());
+        popup.getMenuInflater().inflate(R.menu.actions, popup.getMenu());
 
-            popup.getMenu().findItem(R.id.showServices).setTitle(R.string.show_services);
-
+        popup.getMenu().findItem(R.id.setScrollToEnd).setChecked(isScrollToEndChecked);
 
         // registering popup with OnMenuItemClickListener
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.showServices:
-                        //swapLayoutViews();
-                        break;
-                    case R.id.showSami:
+                    case R.id.setScrollToEnd: // sets scrolling to the last added value in fragments' graphs
+                        if(item.isChecked()) {
+                            item.setChecked(false);
+                            isScrollToEndChecked = false;
+                        } else {
+                            item.setChecked(true);
+                            isScrollToEndChecked = true;
+                        }
+                        sharedViewModel.setScrollToEnd(isScrollToEndChecked);
+
+                        // Keeps the popup menu open
+                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+                        item.setActionView(new View(LeConnectedDeviceActivity.this));
+                        item.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+                            @Override
+                            public boolean onMenuItemActionExpand(MenuItem item) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onMenuItemActionCollapse(MenuItem item) {
+                                return false;
+                            }
+                        });
+                        return false;
+                    case R.id.sendToSami:
                         // TODO: send data to SaMi cloud
-                        break;
+                        return true;
+                    default: return true;
                 }
-                return true;
             }
         });
 
         popup.show();
-    }
-
-    private void setConnectionState(int connectionState) {
-        String tag = pagerAdapter.getServicesFragmentTag();
-        servicesFragment = (ServicesFragment) getSupportFragmentManager().findFragmentByTag(tag);
-
-        if(servicesFragment != null)
-            if(servicesFragment.isResumed())
-                servicesFragment.setConnectionState(connectionState, hasReceivedServices);
     }
 
 }

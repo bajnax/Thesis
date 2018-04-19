@@ -1,6 +1,5 @@
 package com.savonia.thesis;
 
-import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -8,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -20,10 +20,13 @@ import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.db.entity.Temperature;
+import com.savonia.thesis.viewModels.SensorsDataViewModel;
+import com.savonia.thesis.viewModels.SharedViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -42,6 +45,7 @@ public class TemperatureFragment extends Fragment {
     private String mParam1;
     private GraphView temperatureGraph;
     private View rootView;
+    private boolean isScrollToEndChecked = false;
     private PointsGraphSeries<DataPoint> temperatureSeries;
     private SimpleDateFormat mDateFormatter;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -80,6 +84,16 @@ public class TemperatureFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
         setRetainInstance(true);
+
+        SharedViewModel sharedViewModel= ViewModelProviders.of(getActivity()).get(SharedViewModel.class);
+
+        sharedViewModel.getScrollToEnd().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@NonNull Boolean scrollToEnd) {
+                isScrollToEndChecked = scrollToEnd;
+            }
+        });
+
     }
 
     @Override
@@ -88,8 +102,9 @@ public class TemperatureFragment extends Fragment {
 
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_temperature, container, false);
+
         temperatureGraph = (GraphView) rootView.findViewById(R.id.temperatureGraph);
-        mDateFormatter = new SimpleDateFormat("HH:mm:ss");
+        mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
         temperatureGraph.setTitle("Current sensor\'s data");
         temperatureGraph.setTitleColor(R.color.colorPrimaryDark);
@@ -223,7 +238,8 @@ public class TemperatureFragment extends Fragment {
             {
                 try {
                     Log.i(TAG, "temperature timestamp: " + temperature.getTimestamp() + " and id: " + temperature.getId());
-                    temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(), temperature.getTemperatureValue()), false, 1000);
+                    temperatureSeries.appendData(new DataPoint(temperature.getTimestamp(),
+                            temperature.getTemperatureValue()), isScrollToEndChecked, 1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -233,6 +249,7 @@ public class TemperatureFragment extends Fragment {
         mHandler.post(mTimer1);
 
     }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(String tag, Uri uri) {

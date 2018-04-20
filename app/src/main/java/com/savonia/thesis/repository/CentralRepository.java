@@ -7,6 +7,7 @@ import android.arch.lifecycle.MediatorLiveData;
 import com.savonia.thesis.db.SensorsValuesDatabase;
 import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
+import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class CentralRepository {
     private final SensorsValuesDatabase mDatabase;
     private MediatorLiveData<List<Temperature>> mObservableTemperatures;
     private MediatorLiveData<List<Gas>> mObservableGases;
+    private MediatorLiveData<List<MeasurementsModel>> mObservableMeasurementsModel;
 
     private CentralRepository(final SensorsValuesDatabase database) {
         mDatabase = database;

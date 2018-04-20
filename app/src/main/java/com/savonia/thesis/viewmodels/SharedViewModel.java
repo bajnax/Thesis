@@ -1,4 +1,4 @@
-package com.savonia.thesis.viewModels;
+package com.savonia.thesis.viewmodels;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;

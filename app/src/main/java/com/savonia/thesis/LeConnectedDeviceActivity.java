@@ -1,7 +1,6 @@
 package com.savonia.thesis;
 
 import android.Manifest;
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -40,7 +39,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.savonia.thesis.viewModels.SharedViewModel;
+import com.savonia.thesis.viewmodels.SharedViewModel;
 
 public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFragmentInteractionListener<Object> {
 
@@ -141,7 +140,12 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         public void onServiceDisconnected(ComponentName componentName) {
 
             Log.d(TAG, "ON SERVICE DISCONNECTED");
-            unregisterReceiver(mGattUpdateReceiver);
+
+            try {
+                unregisterReceiver(mGattUpdateReceiver);
+            }catch(IllegalArgumentException ex) {
+                ex.printStackTrace();
+            }
             unbindService(mServiceConnection);
             isServiceBound = false;
 
@@ -342,7 +346,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         registerReceiver(bluetoothStateReceiver, bleStateFilter);
         // after switching bluetooth adapter off and turning it on again
         // the app should wait for 25 seconds
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+        new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -351,19 +355,23 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                     ex.printStackTrace();
                 }
             }
-        }, 600);
+        }, 70);
 
     }
 
 
-    /* It is also important that you use onStop() to release resources that might leak memory,
+    /* It is also important to use onStop() to release resources that might leak memory,
         because it is possible for the system to kill the process hosting your activity without
         calling the activity's final onDestroy() callback*/
     @Override
     protected void onStop() {
         super.onStop();
 
-        unregisterReceiver(bluetoothStateReceiver);
+        try {
+            unregisterReceiver(bluetoothStateReceiver);
+        }catch(IllegalArgumentException ex) {
+            ex.printStackTrace();
+        }
 
         if (!isChangingConfigurations()) {
             Log.d(TAG, "ACTIVITY ONSTOP");
@@ -372,7 +380,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
             // service keeps running, but the activity unbinds on configuration changes
             if(isServiceBound) {
                 Log.d(TAG, "UNBINDING ON ONSTOP");
-                unregisterReceiver(mGattUpdateReceiver);
+                try {
+                    unregisterReceiver(mGattUpdateReceiver);
+                }catch(IllegalArgumentException ex) {
+                    ex.printStackTrace();
+                }
                 unbindService(mServiceConnection);
                 isServiceBound = false;
             }
@@ -395,7 +407,11 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
     private void clearConnectionToDevice() {
         if(isServiceBound) {
-            unregisterReceiver(mGattUpdateReceiver);
+            try {
+                unregisterReceiver(mGattUpdateReceiver);
+            }catch(IllegalArgumentException ex) {
+                ex.printStackTrace();
+            }
             unbindService(mServiceConnection);
         }
         isServiceBound = false;

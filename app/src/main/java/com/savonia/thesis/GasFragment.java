@@ -20,8 +20,8 @@ import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.db.entity.Gas;
-import com.savonia.thesis.viewModels.SensorsDataViewModel;
-import com.savonia.thesis.viewModels.SharedViewModel;
+import com.savonia.thesis.viewmodels.SensorsDataViewModel;
+import com.savonia.thesis.viewmodels.SharedViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -139,7 +139,6 @@ public class GasFragment extends Fragment {
         gasSeries = new PointsGraphSeries<>();
         gasGraph.addSeries(gasSeries);
 
-        // TODO: move this part to "onCreate"
         final SensorsDataViewModel sensorsDataViewModel =
                 ViewModelProviders.of(getActivity()).get(SensorsDataViewModel.class);
 

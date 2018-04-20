@@ -20,8 +20,8 @@ import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.db.entity.Temperature;
-import com.savonia.thesis.viewModels.SensorsDataViewModel;
-import com.savonia.thesis.viewModels.SharedViewModel;
+import com.savonia.thesis.viewmodels.SensorsDataViewModel;
+import com.savonia.thesis.viewmodels.SharedViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -95,6 +95,7 @@ public class TemperatureFragment extends Fragment {
         });
 
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

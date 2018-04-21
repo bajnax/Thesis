@@ -3,26 +3,36 @@ package com.savonia.thesis.repository;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.arch.lifecycle.MutableLiveData;
 
 import com.savonia.thesis.db.SensorsValuesDatabase;
 import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
+import com.savonia.thesis.webclient.WebClient;
 import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
+import com.savonia.thesis.webclient.measuremetsmodels.SaMiClient;
 
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CentralRepository {
     private static CentralRepository sInstance;
 
     private final SensorsValuesDatabase mDatabase;
+    private final SaMiClient saMiClient;
     private MediatorLiveData<List<Temperature>> mObservableTemperatures;
     private MediatorLiveData<List<Gas>> mObservableGases;
-    private MediatorLiveData<List<MeasurementsModel>> mObservableMeasurementsModel;
+    private MutableLiveData<List<MeasurementsModel>> mObservableMeasurementsModel;
 
     private CentralRepository(final SensorsValuesDatabase database) {
         mDatabase = database;
         mObservableTemperatures = new MediatorLiveData<>();
         mObservableGases = new MediatorLiveData<>();
+        mObservableMeasurementsModel = new MutableLiveData<>();
+        saMiClient = WebClient.getWebClient();
 
 
         mObservableTemperatures.addSource(mDatabase.getTemperatureDao().getAllTemperatureValues(),
@@ -76,6 +86,26 @@ public class CentralRepository {
 
     public void insertGas(Gas gas) {
         mDatabase.getGasDao().insert(gas);
+    }
+
+
+    public LiveData<List<MeasurementsModel>> getWebMeasurements() {
+        return mObservableMeasurementsModel;
+    }
+
+
+    public void makeGetRequest() {
+        saMiClient.getMeasurements().enqueue(new Callback<List<MeasurementsModel>>() {
+            @Override
+            public void onResponse(Call<List<MeasurementsModel>> call, Response<List<MeasurementsModel>> response) {
+                mObservableMeasurementsModel.setValue(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<List<MeasurementsModel>> call, Throwable throwable) {
+                System.out.println(throwable);
+            }
+        });
     }
 
 

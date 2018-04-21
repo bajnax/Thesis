@@ -18,13 +18,13 @@ import com.savonia.thesis.db.entity.Temperature;
 public abstract class SensorsValuesDatabase extends RoomDatabase {
 
     private final MutableLiveData<Boolean> mIsDatabaseCreated = new MutableLiveData<>();
-    private static SensorsValuesDatabase INSTANCE;
+    private static volatile SensorsValuesDatabase INSTANCE;
     private static final String DATABASE_NAME = "sensors_values_database.db";
 
     public abstract TemperatureDao getTemperatureDao();
     public abstract GasDao getGasDao();
 
-    //Singleton pattern is used, since each RoomDatabase instance is fairly expensive
+    //Singleton pattern
     public static synchronized SensorsValuesDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
             // Creates database here

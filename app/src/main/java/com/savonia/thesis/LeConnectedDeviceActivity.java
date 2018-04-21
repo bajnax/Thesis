@@ -39,7 +39,11 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.viewmodels.SharedViewModel;
+import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
+
+import java.util.List;
 
 public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFragmentInteractionListener<Object> {
 
@@ -64,8 +68,8 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private TabLayout tabLayout;
 
     private SharedViewModel sharedViewModel;
-
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
+    private SaMiViewModel saMiViewModel;
+    private List<MeasurementsModel> measurementsModelList;
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
@@ -79,6 +83,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
     private String deviceAddress;
     private ServicesFragment servicesFragment;
+    private PopupMenu popup;
 
     private LocationManager mLocationManager;
     private GoogleApiClient googleApiClient;
@@ -280,6 +285,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         }
 
         sharedViewModel = ViewModelProviders.of(LeConnectedDeviceActivity.this).get(SharedViewModel.class);
+        saMiViewModel = ViewModelProviders.of(LeConnectedDeviceActivity.this).get(SaMiViewModel.class);
 
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
@@ -368,8 +374,15 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         super.onStop();
 
         try {
+            // to avoid error in 7.1.1
+            if(popup != null) {
+                popup.dismiss();
+                popup.getMenu().close();
+                popup = null;
+            }
+
             unregisterReceiver(bluetoothStateReceiver);
-        }catch(IllegalArgumentException ex) {
+        }catch(Exception ex) {
             ex.printStackTrace();
         }
 
@@ -619,7 +632,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
 
 
     public void showPopup(View view) {
-        PopupMenu popup = new PopupMenu(this, view);
+        popup = new PopupMenu(this, view);
 
         popup.getMenuInflater().inflate(R.menu.actions, popup.getMenu());
 
@@ -656,6 +669,18 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                         return false;
                     case R.id.sendToSami:
                         // TODO: send data to SaMi cloud
+                        return true;
+                    case R.id.getFromSami:
+                        saMiViewModel.makeGetRequest();
+                        saMiViewModel.getMeasurements().observe(LeConnectedDeviceActivity.this, measurementsModels -> {
+                            measurementsModelList = measurementsModels;
+                            try {
+                                Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED: " +
+                                        measurementsModelList.get(0).getData().get(0).getValue());
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        });
                         return true;
                     default: return true;
                 }

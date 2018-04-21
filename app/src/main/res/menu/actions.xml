@@ -9,7 +9,10 @@
         android:title="@string/scroll_to_end"
         app:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/sendToSami"
-        android:title="@string/show_sami"
+        android:title="@string/send_to_sami"
+        app:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/getFromSami"
+        android:title="@string/get_from_sami"
         app:showAsAction="ifRoom|withText"/>
 
 </menu>

@@ -33,7 +33,8 @@
 
     <string name="show_services">Display GATTs</string>
     <string name="draw_graph">Display a LiveData graph</string>
-    <string name="show_sami">Send data to SaMi cloud</string>
+    <string name="send_to_sami">Post data to SaMi cloud</string>
+    <string name="get_from_sami">Get data from SaMi cloud</string>
 
 
 </resources>

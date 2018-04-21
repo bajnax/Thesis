@@ -1,5 +1,7 @@
 package com.savonia.thesis.webclient.measuremetsmodels;
 
+import android.arch.lifecycle.LiveData;
+
 import java.util.List;
 
 import retrofit2.Call;
@@ -14,7 +16,6 @@ public interface SaMiClient {
             "Host: sami.savonia.fi",
             "Content-Type: text/json"
     })
-    @GET("/json/measurements/" + key)
-    Call<List<MeasurementsModel>> measurements(
-    );
+    @GET("json/measurements/" + key)
+    Call<List<MeasurementsModel>> getMeasurements();
 }

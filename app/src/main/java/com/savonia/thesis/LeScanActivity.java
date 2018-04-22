@@ -424,10 +424,12 @@ public class LeScanActivity extends AppCompatActivity {
             viewHolder.connect_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                        Intent showDeviceCharacteristics = new Intent();
-                        showDeviceCharacteristics.setClass(LeScanActivity.this, LeConnectedDeviceActivity.class);
-                        showDeviceCharacteristics.putExtra("deviceAddress", GattAttributesSample.DEVICE_ADDRESS);
-                        startActivity(showDeviceCharacteristics);
+                    if(device.getAddress().equals(GattAttributesSample.DEVICE_ADDRESS)) {
+                        Intent connectToDevice = new Intent();
+                        connectToDevice.setClass(LeScanActivity.this, LeConnectedDeviceActivity.class);
+                        connectToDevice.putExtra("deviceAddress", GattAttributesSample.DEVICE_ADDRESS);
+                        startActivity(connectToDevice);
+                    }
                 }
             });
 

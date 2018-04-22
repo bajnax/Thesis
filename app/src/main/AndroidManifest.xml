@@ -21,9 +21,9 @@
         <activity android:name=".LeScanActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <service
@@ -31,7 +31,8 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".LeConnectedDeviceActivity"></activity>
+        <activity android:name=".LeConnectedDeviceActivity" />
+        <activity android:name=".GetResponseActivity"></activity>
     </application>
 
 </manifest>

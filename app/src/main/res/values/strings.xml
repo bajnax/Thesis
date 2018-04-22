@@ -35,6 +35,7 @@
     <string name="draw_graph">Display a LiveData graph</string>
     <string name="send_to_sami">Post data to SaMi cloud</string>
     <string name="get_from_sami">Get data from SaMi cloud</string>
+    <string name="title_activity_get_response">GetResponseActivity</string>
 
 
 </resources>

@@ -68,8 +68,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private TabLayout tabLayout;
 
     private SharedViewModel sharedViewModel;
-    private SaMiViewModel saMiViewModel;
-    private List<MeasurementsModel> measurementsModelList;
 
     private BluetoothLowEnergyService mBluetoothLEService;
 
@@ -82,7 +80,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     private boolean shouldAutoConnect = false;
 
     private String deviceAddress;
-    private ServicesFragment servicesFragment;
     private PopupMenu popup;
 
     private LocationManager mLocationManager;
@@ -285,7 +282,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
         }
 
         sharedViewModel = ViewModelProviders.of(LeConnectedDeviceActivity.this).get(SharedViewModel.class);
-        saMiViewModel = ViewModelProviders.of(LeConnectedDeviceActivity.this).get(SaMiViewModel.class);
 
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
@@ -671,16 +667,17 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                         // TODO: send data to SaMi cloud
                         return true;
                     case R.id.getFromSami:
-                        saMiViewModel.makeGetRequest();
-                        saMiViewModel.getMeasurements().observe(LeConnectedDeviceActivity.this, measurementsModels -> {
-                            measurementsModelList = measurementsModels;
-                            try {
-                                Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED: " +
-                                        measurementsModelList.get(0).getData().get(0).getValue());
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        });
+
+                        try {
+
+                            Intent connectToDevice = new Intent();
+                            connectToDevice.setClass(LeConnectedDeviceActivity.this, GetResponseActivity.class);
+                            startActivity(connectToDevice);
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+
                         return true;
                     default: return true;
                 }

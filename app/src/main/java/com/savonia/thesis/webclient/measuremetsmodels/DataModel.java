@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class DataModel {
 
-    @SerializedName("BinaryValue")
+    /*@SerializedName("BinaryValue")
     @Expose
     private byte[] binaryValue;
     @SerializedName("BinaryValueBase64")
@@ -25,7 +25,24 @@ public class DataModel {
     private double value;
     @SerializedName("XmlValue")
     @Expose
+    private String xmlValue;*/
+
+    @SerializedName("BinaryValue")
+    private byte[] binaryValue;
+    @SerializedName("BinaryValueBase64")
+    private String binaryValueBase64;
+    @SerializedName("LongValue")
+    private long longValue;
+    @SerializedName("Tag")
+    private String tag;
+    @SerializedName("TextValue")
+    private String textValue;
+    @SerializedName("Value")
+    private double value;
+    @SerializedName("XmlValue")
     private String xmlValue;
+
+    public DataModel(){}
 
     public byte[] getBinaryValue() {
         return binaryValue;

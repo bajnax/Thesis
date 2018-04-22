@@ -95,6 +95,7 @@ public class CentralRepository {
 
 
     public void makeGetRequest() {
+
         saMiClient.getMeasurements().enqueue(new Callback<List<MeasurementsModel>>() {
             @Override
             public void onResponse(Call<List<MeasurementsModel>> call, Response<List<MeasurementsModel>> response) {

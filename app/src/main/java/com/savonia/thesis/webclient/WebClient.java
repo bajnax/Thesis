@@ -12,7 +12,7 @@ public class WebClient {
     private static SaMiClient saMiClient = null;
 
     public static SaMiClient getWebClient() {
-        if(retrofit == null) {
+        if(saMiClient == null) {
             OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
             retrofit = new Retrofit.Builder()
                     .baseUrl(saMiUrl)

@@ -26,12 +26,14 @@ public class CentralRepository {
     private MediatorLiveData<List<Temperature>> mObservableTemperatures;
     private MediatorLiveData<List<Gas>> mObservableGases;
     private MutableLiveData<List<MeasurementsModel>> mObservableMeasurementsModel;
+    private MutableLiveData<MeasurementsModel> mObservablePostResponse;
 
     private CentralRepository(final SensorsValuesDatabase database) {
         mDatabase = database;
         mObservableTemperatures = new MediatorLiveData<>();
         mObservableGases = new MediatorLiveData<>();
         mObservableMeasurementsModel = new MutableLiveData<>();
+        mObservablePostResponse = new MutableLiveData<>();
         saMiClient = WebClient.getWebClient();
 
 
@@ -99,7 +101,8 @@ public class CentralRepository {
         saMiClient.getMeasurements().enqueue(new Callback<List<MeasurementsModel>>() {
             @Override
             public void onResponse(Call<List<MeasurementsModel>> call, Response<List<MeasurementsModel>> response) {
-                mObservableMeasurementsModel.setValue(response.body());
+                if(response.isSuccessful())
+                    mObservableMeasurementsModel.postValue(response.body());
             }
 
             @Override
@@ -107,6 +110,28 @@ public class CentralRepository {
                 System.out.println(throwable);
             }
         });
+    }
+
+
+    public void makePostRequest(String key, MeasurementsModel measurement) {
+
+        saMiClient.postMeasurements(key, measurement).enqueue(new Callback<MeasurementsModel>() {
+            @Override
+            public void onResponse(Call<MeasurementsModel> call, Response<MeasurementsModel> response) {
+                if(response.isSuccessful()) {
+                    mObservablePostResponse.postValue(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MeasurementsModel> call, Throwable throwable) {
+                System.out.println(throwable);
+            }
+        });
+    }
+
+    public LiveData<MeasurementsModel> getPostResponse() {
+        return mObservablePostResponse;
     }
 
 

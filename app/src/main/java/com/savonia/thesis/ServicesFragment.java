@@ -27,14 +27,12 @@ import com.savonia.thesis.viewmodels.SharedViewModel;
  * create an instance of this fragment.
  */
 public class ServicesFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    // the fragment initialization parameters
     private static final String ARG_PARAM1 = "param1";
     private static final String TAG = ServicesFragment.class.getSimpleName();
     private final static String RECEIVED_SERVICES = "ServicesReceived";
     private final static String CONNECTION_STATE = "ConnectionState";
 
-    // TODO: Rename and change types of parameters
     private String mParam1;
     private boolean hasReceivedServices;
     private int connectionState;
@@ -50,14 +48,7 @@ public class ServicesFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @return A new instance of fragment ServicesFragment.
-     */
-    // TODO: Rename and change types and number of parameters
+
     public static ServicesFragment newInstance(String param1) {
 
         Log.i(TAG, "ServicesFragment newInstance");

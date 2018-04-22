@@ -32,7 +32,8 @@
             android:exported="true" />
 
         <activity android:name=".LeConnectedDeviceActivity" />
-        <activity android:name=".GetResponseActivity"></activity>
+        <activity android:name=".GetResponseActivity" />
+        <activity android:name=".PostResponseActivity"></activity>
     </application>
 
 </manifest>

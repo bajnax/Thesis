@@ -13,6 +13,7 @@ public class SaMiViewModel extends AndroidViewModel {
 
     private LiveData<List<MeasurementsModel>> measurementsList;
     private CentralRepository mRepository;
+    private LiveData<MeasurementsModel> measurement;
 
 
     public SaMiViewModel(@NonNull Application application) {
@@ -20,13 +21,16 @@ public class SaMiViewModel extends AndroidViewModel {
         mRepository = CentralRepository.
                 getInstance(SensorsValuesDatabase.getDatabase(application));
         measurementsList = mRepository.getWebMeasurements();
+        measurement = mRepository.getPostResponse();
     }
 
-    // TODO: make get requests for specific time ranges
+    // TODO: make get requests for specific conditions
     /*
     public void initGetCall(Date initialDate, Date lastDate) {
         measurementsList = mRepository.getWebMeasurements(initialDate, lastDate);
     }*/
+
+
 
     public void makeGetRequest() {
         mRepository.makeGetRequest();
@@ -34,5 +38,13 @@ public class SaMiViewModel extends AndroidViewModel {
 
     public LiveData<List<MeasurementsModel>> getMeasurements() {
         return measurementsList;
+    }
+
+    public void makePostRequest(String key, MeasurementsModel postedMeasurement) {
+        mRepository.makePostRequest(key, postedMeasurement);
+    }
+
+    public LiveData<MeasurementsModel> getPostResponseMeasurement() {
+        return measurement;
     }
 }

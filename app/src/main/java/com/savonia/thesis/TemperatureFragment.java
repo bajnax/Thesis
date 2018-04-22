@@ -36,8 +36,7 @@ import java.util.Locale;
  * create an instance of this fragment.
  */
 public class TemperatureFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    // the fragment initialization parameters
     private static final String ARG_PARAM1 = "param1";
     private static final String TAG = TemperatureFragment.class.getSimpleName();
 
@@ -58,14 +57,7 @@ public class TemperatureFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @return A new instance of fragment TemperatureFragment.
-     */
-    // TODO: Rename and change types and number of parameters
+
     public static TemperatureFragment newInstance(String param1) {
 
         Log.i(TAG, "TemperatureFragment newInstance");

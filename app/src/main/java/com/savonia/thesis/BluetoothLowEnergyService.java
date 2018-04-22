@@ -130,20 +130,23 @@ public class BluetoothLowEnergyService extends Service {
                                         readCharacteristic(characteristic);
                                     }
                                 }
-                                    // TODO: make this call from the activity and restart the service from there if notified characteristic does not arrive in 18 seconds after receiving services
-                                    mHandler.postDelayed(notReceivingData = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try{
-                                                if(!hasReceivedData) {
-                                                    reConnect(3000, false);
-                                                    Log.d(TAG, "NOTIFIED CHARACTERISTIC DID NOT ARRIVE");
-                                                }
-                                            } catch(Exception e) {
-                                                e.printStackTrace();
+
+                                // restarts the service from there if notified characteristic does not arrive in 18 seconds
+                                // after receiving services
+                                mHandler.postDelayed(notReceivingData = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try{
+                                            if(!hasReceivedData) {
+                                                reConnect(3000, false);
+                                                Log.d(TAG, "NOTIFIED CHARACTERISTIC DID NOT ARRIVE");
                                             }
+                                        } catch(Exception e) {
+                                            e.printStackTrace();
                                         }
-                                    }, 18000);
+                                    }
+                                }, 18000);
+
                             }
                         } catch (Exception ex) {
                             ex.printStackTrace();

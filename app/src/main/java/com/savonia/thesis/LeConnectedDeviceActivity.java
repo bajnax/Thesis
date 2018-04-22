@@ -105,7 +105,6 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
     }
 
 
-    // TODO: read about ServiceConnection
     // initializing BLE service and attempting to connect to the device
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -664,10 +663,17 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                         });
                         return false;
                     case R.id.sendToSami:
-                        // TODO: send data to SaMi cloud
+                        // TODO: POST request
+                        try {
+                            Intent connectToDevice = new Intent();
+                            connectToDevice.setClass(LeConnectedDeviceActivity.this, PostResponseActivity.class);
+                            startActivity(connectToDevice);
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                         return true;
                     case R.id.getFromSami:
-
                         try {
 
                             Intent connectToDevice = new Intent();

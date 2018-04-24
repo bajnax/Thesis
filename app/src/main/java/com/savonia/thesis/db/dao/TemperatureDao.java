@@ -20,4 +20,7 @@ public interface TemperatureDao {
     @Query("SELECT * from temperature_table ORDER BY id")
     LiveData<List<Temperature>> getAllTemperatureValues();
 
+    @Query("SELECT * from temperature_table ORDER BY id")
+    List<Temperature> getAllTemperatureValuesAsync();
+
 }

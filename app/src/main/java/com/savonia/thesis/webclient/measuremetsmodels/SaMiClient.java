@@ -2,6 +2,7 @@ package com.savonia.thesis.webclient.measuremetsmodels;
 
 import android.arch.lifecycle.LiveData;
 
+import java.util.HashMap;
 import java.util.List;
 
 import retrofit2.Call;
@@ -10,7 +11,9 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 public interface SaMiClient {
     String key = "savoniatest";
@@ -29,8 +32,6 @@ public interface SaMiClient {
             "Host: sami.savonia.fi",
             "Content-Type: text/json"
     })
-
     @POST("json/measurements/save")
-    @FormUrlEncoded
-    Call<MeasurementsModel> postMeasurements(@Field("key") String key, @Body MeasurementsModel measurementsModel);
+    Call<String> postMeasurements(@Body MeasurementsPackage measurementsPackage);
 }

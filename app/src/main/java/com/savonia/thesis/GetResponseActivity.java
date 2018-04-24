@@ -99,23 +99,26 @@ public class GetResponseActivity extends AppCompatActivity {
             measurementsModelList = measurementsModels;
             try {
 
-                for(int i = 0; i < measurementsModelList.size(); i++) {
-                    for(int j = 0; j<measurementsModelList.get(i).getData().size(); j++) {
-                        Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED (" + i + ", " + j +")" +
-                                measurementsModelList.get(i).getData().get(j).getValue());
-                    }
-                }
+                if(measurementsModelList != null) {
 
-                for(int i = 0; i < 2; i++) {
-                    for(int j = 0; j<measurementsModelList.get(i).getData().size(); j++) {
-                        if(i == 0) {//temp
-                            displayTemperatures(measurementsModelList.get(i).getData());
-                        } else { //gas
-                            displayGases(measurementsModelList.get(i).getData());
+                    for (int i = 0; i < measurementsModelList.size(); i++) {
+                        for (int j = 0; j < measurementsModelList.get(i).getData().size(); j++) {
+                            Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED (" + i + ", " + j + ")" +
+                                    measurementsModelList.get(i).getData().get(j).getValue());
                         }
                     }
-                }
 
+                    for (int i = 0; i < 2; i++) {
+                        for (int j = 0; j < measurementsModelList.get(i).getData().size(); j++) {
+                            if (i == 0) {//temp
+                                displayTemperatures(measurementsModelList.get(i).getData());
+                            } else { //gas
+                                displayGases(measurementsModelList.get(i).getData());
+                            }
+                        }
+                    }
+
+                }
 
             } catch (Exception ex) {
                 ex.printStackTrace();

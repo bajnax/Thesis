@@ -24,20 +24,23 @@ public class MeasurementsModel {
     @Expose
     private String tag;
 
-    //TODO:  throws 'java.lang.NoClassDefFoundError: Failed resolution of: Ljava'?? But java version 8 should work fine..
-    /*@SerializedName("Timestamp")
-    @Expose
-    private OffsetDateTime timestamp;*/
-
-    // TODO: add backward port of jdk 8 time library for earlier jdk versions!
+    /*//TODO:  throws 'java.lang.NoClassDefFoundError: Failed resolution of: Ljava'?? But java version 8 should work fine..
     @SerializedName("Timestamp")
     @Expose
-    private DateTimeOffset timestamp;
+    private String timestamp;*/
+
+
+
+    /*// TODO: add backward port of jdk 8 time library for earlier jdk versions!
+    @SerializedName("Timestamp")
+    @Expose
+    private DateTimeOffset timestamp;*/
 
     @SerializedName("TimestampISO8601")
     @Expose
     private String timestampISO8601;
 
+    // 2018-04-27T12:36:22+03:00
     public MeasurementsModel() {}
 
     public List<DataModel> getData() {
@@ -88,13 +91,13 @@ public class MeasurementsModel {
         this.timestamp = timestamp;
     }*/
 
-    public DateTimeOffset getTimestamp() {
+    /*public DateTimeOffset getTimestamp() {
         return timestamp;
     }
 
     public void setTimestamp(DateTimeOffset timestamp) {
         this.timestamp = timestamp;
-    }
+    }*/
 
     public String getTimestampISO8601() {
         return timestampISO8601;

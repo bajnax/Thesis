@@ -41,13 +41,15 @@ public class PostResponseActivity extends AppCompatActivity {
                     Log.d(TAG, "GENERATING TEMPERATURE MEASUREMENT");
 
                     // generating a measurement from the retrieved list of temperatures
-                    initialMeasurement.setTag("KondopogaTemperature");
-                    initialMeasurement.setTimestampISO8601("2018-04-23 15:20:00");
+                    initialMeasurement.setObject("Environmental meas..");
+                    initialMeasurement.setTag("KondopogaTemp");
+                    initialMeasurement.setTimestampISO8601("2018-04-27 12:36:22");
 
                     List<DataModel> temps = new ArrayList<>();
                     for(int i = 0; i < temperatureList.size(); i++) {
                         DataModel dm = new DataModel();
                         Log.d(TAG, "Temperature value: " + temperatureList.get(i).getTemperatureValue());
+                        dm.setTag("KondopogaTemperature");
                         dm.setValue(temperatureList.get(i).getTemperatureValue());
                         temps.add(dm);
                     }

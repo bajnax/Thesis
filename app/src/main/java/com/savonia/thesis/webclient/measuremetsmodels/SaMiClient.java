@@ -33,5 +33,5 @@ public interface SaMiClient {
             "Content-Type: text/json"
     })
     @POST("json/measurements/save")
-    Call<String> postMeasurements(@Body MeasurementsPackage measurementsPackage);
+    Call postMeasurements(@Body MeasurementsPackage measurementsPackage);
 }

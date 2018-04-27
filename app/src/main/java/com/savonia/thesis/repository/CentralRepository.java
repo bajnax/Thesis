@@ -221,18 +221,18 @@ public class CentralRepository {
         measurementsPackage.setKey(key);
         measurementsPackage.setMeasurements(measList);
 
-        saMiClient.postMeasurements(measurementsPackage).enqueue(new Callback<String>() {
+        saMiClient.postMeasurements(measurementsPackage).enqueue(new Callback() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
+            public void onResponse(Call call, Response response) {
                 if(response.isSuccessful()) {
                     //mObservablePostResponse.setValue(response.body().getMeasurements());
-                    Log.d(TAG, "success " + response.body());
+                    Log.d(TAG, "success " + response.body().toString());
                 }
-                Log.d(TAG, "success?? " + response.body());
+                Log.d(TAG, "success?? " + response.body().toString());
             }
 
             @Override
-            public void onFailure(Call<String> call, Throwable throwable) {
+            public void onFailure(Call call, Throwable throwable) {
                 System.out.println(throwable.toString());
             }
         });

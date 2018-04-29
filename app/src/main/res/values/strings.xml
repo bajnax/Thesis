@@ -33,9 +33,14 @@
 
     <string name="show_services">Display GATTs</string>
     <string name="draw_graph">Display a LiveData graph</string>
-    <string name="send_to_sami">Post data to SaMi cloud</string>
+    <string name="send_to_sami">Offload data to SaMi cloud</string>
     <string name="get_from_sami">Get data from SaMi cloud</string>
     <string name="title_activity_get_response">GetResponseActivity</string>
+    <string name="measurement_name">Measurement name</string>
+    <string name="measurement_tag">Measurement tag</string>
+    <string name="temperature_tag">Temperature tag</string>
+    <string name="gas_tag">Gas tag</string>
+    <string name="post_button_text">Send</string>
 
 
 </resources>

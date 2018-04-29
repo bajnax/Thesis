@@ -35,7 +35,9 @@ public class CentralRepository {
     private MediatorLiveData<List<Gas>> mObservableGases;
     private MutableLiveData<List<MeasurementsModel>> mObservableGetMeasurements;
     private MutableLiveData<List<MeasurementsModel>> mObservablePostResponse;
-    private MutableLiveData<List<Temperature>> mObservableAsyncTaskSelection;
+    private MutableLiveData<List<Temperature>> mObservableAsyncTemperaturesList;
+    private MutableLiveData<List<Gas>> mObservableAsyncGasesList;
+    private MutableLiveData<Integer> responseStatus;
 
 
 
@@ -45,7 +47,9 @@ public class CentralRepository {
         mObservableGases = new MediatorLiveData<>();
         mObservableGetMeasurements = new MutableLiveData<>();
         mObservablePostResponse = new MutableLiveData<>();
-        mObservableAsyncTaskSelection = new MutableLiveData<>();
+        mObservableAsyncTemperaturesList = new MutableLiveData<>();
+        mObservableAsyncGasesList = new MutableLiveData<>();
+        responseStatus = new MutableLiveData<>();
         saMiClient = WebClient.getWebClient();
 
 
@@ -158,12 +162,12 @@ public class CentralRepository {
         }
     }
 
-
-    public class GenerateMeasurementAsyncTask extends AsyncTask<Void, Void, List<Temperature>> {
+    // retrieving the list of temperatures from the database
+    public class GenerateTemperatureMeasurementAsyncTask extends AsyncTask<Void, Void, List<Temperature>> {
 
         private final TemperatureDao temperatureDao;
 
-        GenerateMeasurementAsyncTask(SensorsValuesDatabase db) {
+        GenerateTemperatureMeasurementAsyncTask(SensorsValuesDatabase db) {
             temperatureDao = db.getTemperatureDao();
         }
 
@@ -174,18 +178,50 @@ public class CentralRepository {
 
         @Override
         protected void onPostExecute(List<Temperature> temp) {
-            mObservableAsyncTaskSelection.setValue(temp);
+            mObservableAsyncTemperaturesList.setValue(temp);
         }
     }
 
     public void generateTemperatureMeasurementAsync() {
-        mObservableAsyncTaskSelection.setValue(null);
-        new GenerateMeasurementAsyncTask(mDatabase).execute();
+        mObservableAsyncTemperaturesList.setValue(null);
+        new GenerateTemperatureMeasurementAsyncTask(mDatabase).execute();
     }
 
 
     public LiveData<List<Temperature>> getTemperatureMeasurementAsync() {
-        return mObservableAsyncTaskSelection;
+        return mObservableAsyncTemperaturesList;
+    }
+
+
+
+    // retrieving the list of gases from the database
+    public class GenerateGasMeasurementAsyncTask extends AsyncTask<Void, Void, List<Gas>> {
+
+        private final GasDao gasDao;
+
+        GenerateGasMeasurementAsyncTask(SensorsValuesDatabase db) {
+            gasDao = db.getGasDao();
+        }
+
+        @Override
+        protected List<Gas> doInBackground(Void... params) {
+            return gasDao.getAllGasValuesAsync();
+        }
+
+        @Override
+        protected void onPostExecute(List<Gas> gas) {
+            mObservableAsyncGasesList.setValue(gas);
+        }
+    }
+
+    public void generateGasMeasurementAsync() {
+        mObservableAsyncGasesList.setValue(null);
+        new GenerateGasMeasurementAsyncTask(mDatabase).execute();
+    }
+
+
+    public LiveData<List<Gas>> getGasMeasurementAsync() {
+        return mObservableAsyncGasesList;
     }
 
 
@@ -224,22 +260,39 @@ public class CentralRepository {
         saMiClient.postMeasurements(measurementsPackage).enqueue(new Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
+
                 if(response.isSuccessful()) {
+                    // TODO: read server response as a text!
                     //mObservablePostResponse.setValue(response.body().getMeasurements());
-                    Log.d(TAG, "success " + response.body().toString());
+                    Log.d(TAG, "success " + response.body());
+                    responseStatus.setValue(1);
+                } else {
+                    Log.d(TAG, "success?? " + response.body());
+                    responseStatus.setValue(1); //??
                 }
-                Log.d(TAG, "success?? " + response.body());
+
+                Log.d(TAG, "RESPONSE MESSAGE: " + response.message());
+                mObservableAsyncTemperaturesList.setValue(null);
+                mObservableAsyncGasesList.setValue(null);
             }
 
             @Override
             public void onFailure(Call<String> call, Throwable throwable) {
                 System.out.println(throwable.toString());
+                Log.d(TAG, "FAILED TO POST");
+                responseStatus.setValue(2);
+                mObservableAsyncTemperaturesList.setValue(null);
+                mObservableAsyncGasesList.setValue(null);
             }
         });
     }
 
     public LiveData<List<MeasurementsModel>> getPostResponse() {
         return mObservablePostResponse;
+    }
+
+    public LiveData<Integer> getResponseStatus() {
+        return responseStatus;
     }
 
 

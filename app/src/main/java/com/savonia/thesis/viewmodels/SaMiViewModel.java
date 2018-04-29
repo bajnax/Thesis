@@ -5,6 +5,7 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import com.savonia.thesis.db.SensorsValuesDatabase;
+import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
 import com.savonia.thesis.repository.CentralRepository;
 import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
@@ -16,6 +17,8 @@ public class SaMiViewModel extends AndroidViewModel {
     private CentralRepository mRepository;
     private LiveData<List<MeasurementsModel>> measurement;
     private LiveData<List<Temperature>> temperatureListAsync;
+    private LiveData<List<Gas>> gasListAsync;
+    private LiveData<Integer> responseStatus;
 
 
     public SaMiViewModel(@NonNull Application application) {
@@ -25,14 +28,22 @@ public class SaMiViewModel extends AndroidViewModel {
         measurementsList = mRepository.getWebMeasurements();
         measurement = mRepository.getPostResponse();
         temperatureListAsync = mRepository.getTemperatureMeasurementAsync();
+        gasListAsync = mRepository.getGasMeasurementAsync();
+        responseStatus = mRepository.getResponseStatus();
     }
 
-    // TODO: make get requests for specific conditions
-    /*
-    public void initGetCall(Date initialDate, Date lastDate) {
-        measurementsList = mRepository.getWebMeasurements(initialDate, lastDate);
-    }*/
 
+    // GET request
+    public void makeGetRequest() {
+        mRepository.makeGetRequest();
+    }
+
+    public LiveData<List<MeasurementsModel>> getMeasurements() {
+        return measurementsList;
+    }
+
+
+    // POST request
     public void generateTemperatureMeasurementAsync() {
         mRepository.generateTemperatureMeasurementAsync();
     }
@@ -41,13 +52,12 @@ public class SaMiViewModel extends AndroidViewModel {
         return temperatureListAsync;
     }
 
-
-    public void makeGetRequest() {
-        mRepository.makeGetRequest();
+    public void generateGasMeasurementAsync() {
+        mRepository.generateGasMeasurementAsync();
     }
 
-    public LiveData<List<MeasurementsModel>> getMeasurements() {
-        return measurementsList;
+    public LiveData<List<Gas>> getGasMeasurementAsync() {
+        return gasListAsync;
     }
 
     public void makePostRequest(String key, MeasurementsModel postedMeasurement) {
@@ -58,4 +68,7 @@ public class SaMiViewModel extends AndroidViewModel {
         return measurement;
     }
 
+    public LiveData<Integer> getResponseStatus() {
+        return responseStatus;
+    }
 }

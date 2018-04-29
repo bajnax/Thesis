@@ -21,4 +21,6 @@ public interface GasDao {
     @Query("SELECT * from gas_table ORDER BY id")
     LiveData<List<Gas>> getAllGasValues();
 
+    @Query("SELECT * from gas_table ORDER BY id")
+    List<Gas> getAllGasValuesAsync();
 }

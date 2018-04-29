@@ -20,12 +20,6 @@ import android.widget.TextView;
 import com.savonia.thesis.viewmodels.SharedViewModel;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * Use the {@link ServicesFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ServicesFragment extends Fragment {
     // the fragment initialization parameters
     private static final String ARG_PARAM1 = "param1";

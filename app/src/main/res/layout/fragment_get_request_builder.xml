@@ -4,7 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PostRequestActivity">
+    tools:context=".GetRequestActivity">
+
+    <EditText
+        android:id="@+id/key"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:ems="10"
+        android:inputType="textPassword"
+        android:hint="@string/key"
+        android:text="@string/key_password"
+        app:layout_constraintHeight_default="wrap"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <EditText
         android:id="@+id/measurementName"
@@ -18,9 +35,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintVertical_chainStyle="packed"/>
+        app:layout_constraintTop_toBottomOf="@+id/key" />
 
     <EditText
         android:id="@+id/measurementTag"
@@ -37,6 +52,20 @@
         app:layout_constraintTop_toBottomOf="@+id/measurementName" />
 
     <EditText
+        android:id="@+id/takeAmount"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:ems="10"
+        android:inputType="numberSigned"
+        android:hint="@string/take_amount"
+        app:layout_constraintHeight_default="wrap"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/measurementTag" />
+
+    <EditText
         android:id="@+id/temperatureTag"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -48,7 +77,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/measurementTag" />
+        app:layout_constraintTop_toBottomOf="@+id/takeAmount" />
 
     <EditText
         android:id="@+id/gasTag"
@@ -65,16 +94,17 @@
         app:layout_constraintTop_toBottomOf="@+id/temperatureTag" />
 
     <Button
-        android:id="@+id/postButton"
+        android:id="@+id/getButton"
         style="@style/Widget.AppCompat.Button.Colored"
         android:background="@color/colorPrimary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:text="@string/post_button_text"
+        android:text="@string/get_button_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/gasTag"
         app:layout_constraintVertical_bias="0.0" />
+
 
 </android.support.constraint.ConstraintLayout>

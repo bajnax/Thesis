@@ -26,8 +26,8 @@ public class MeasurementsModel {
     @SerializedName("TimestampISO8601")
     @Expose
     private String timestampISO8601;
-
     // 2018-04-27T12:36:22+03:00
+
     public MeasurementsModel() {}
 
     public List<DataModel> getData() {

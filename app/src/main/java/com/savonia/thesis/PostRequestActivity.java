@@ -1,7 +1,6 @@
 package com.savonia.thesis;
 
 import android.arch.lifecycle.ViewModelProviders;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,8 +9,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.savonia.thesis.db.entity.Gas;
-import com.savonia.thesis.db.entity.Temperature;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.webclient.measuremetsmodels.DataModel;
 import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
@@ -21,11 +18,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
-public class PostResponseActivity extends AppCompatActivity {
+public class PostRequestActivity extends AppCompatActivity {
 
-    private static final String TAG = PostResponseActivity.class.getSimpleName();
+    private static final String TAG = PostRequestActivity.class.getSimpleName();
 
     private SaMiViewModel saMiViewModel;
     private MeasurementsModel initialMeasurement;
@@ -47,7 +43,7 @@ public class PostResponseActivity extends AppCompatActivity {
         gasTagEdTxt = (EditText) findViewById(R.id.gasTag);
         sendButton = (Button) findViewById(R.id.postButton);
 
-        saMiViewModel = ViewModelProviders.of(PostResponseActivity.this).get(SaMiViewModel.class);
+        saMiViewModel = ViewModelProviders.of(PostRequestActivity.this).get(SaMiViewModel.class);
 
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,12 +57,12 @@ public class PostResponseActivity extends AppCompatActivity {
                 if(measurementNameEdTxt.getText().toString().trim().length() > 0)
                     initialMeasurement.setObject(measurementNameEdTxt.getText().toString().trim());
                 else
-                    initialMeasurement.setObject("Safety control unit");
+                    initialMeasurement.setObject(getResources().getString(R.string.measurement_name));
 
                 if(measurementTagEdTxt.getText().toString().trim().length() > 0)
                     initialMeasurement.setTag(measurementTagEdTxt.getText().toString().trim());
                 else
-                    initialMeasurement.setTag("Some measurement");
+                    initialMeasurement.setTag(getResources().getString(R.string.measurement_tag));
 
                 Date date = GregorianCalendar.getInstance().getTime();
                 String currentDateAndTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -82,7 +78,7 @@ public class PostResponseActivity extends AppCompatActivity {
         });
 
         // retrieving the list of temperatures from the database
-        saMiViewModel.getTemperatureMeasurementAsync().observe(PostResponseActivity.this, temperatures -> {
+        saMiViewModel.getTemperatureMeasurementAsync().observe(PostRequestActivity.this, temperatures -> {
 
             try {
                 if(temperatures != null) {
@@ -94,7 +90,7 @@ public class PostResponseActivity extends AppCompatActivity {
                         if(temperatureTagEdTxt.getText().toString().trim().length() > 0)
                             tag = temperatureTagEdTxt.getText().toString().trim();
                         else
-                            tag = "Some temperature";
+                            tag = getResources().getString(R.string.temperature_tag);
 
                         // generating a measurement from the retrieved list of temperatures
                         for (int i = 0; i < temperatures.size(); i++) {
@@ -115,7 +111,7 @@ public class PostResponseActivity extends AppCompatActivity {
 
 
         // retrieving the list of gases from the database and sending the measurement
-        saMiViewModel.getGasMeasurementAsync().observe(PostResponseActivity.this, gases -> {
+        saMiViewModel.getGasMeasurementAsync().observe(PostRequestActivity.this, gases -> {
 
             try {
                 if(gases != null) {
@@ -126,7 +122,7 @@ public class PostResponseActivity extends AppCompatActivity {
                         if(gasTagEdTxt.getText().toString().trim().length() > 0)
                             tag = gasTagEdTxt.getText().toString().trim();
                         else
-                            tag = "Some gas";
+                            tag = getResources().getString(R.string.gas_tag);
 
                         // adding the retrieved list of gases to the measurement
                         for (int i = 0; i < gases.size(); i++) {
@@ -150,13 +146,13 @@ public class PostResponseActivity extends AppCompatActivity {
 
 
         // result of the POST request
-        saMiViewModel.getResponseStatus().observe(PostResponseActivity.this, response -> {
+        saMiViewModel.getResponseStatus().observe(PostRequestActivity.this, response -> {
             if(response != 0) {
                 if(response == 1) {
-                    Toast.makeText(PostResponseActivity.this, "The data has been successfully saved in the SaMi cloud!",
+                    Toast.makeText(PostRequestActivity.this, "The data has been successfully saved in the SaMi cloud!",
                             Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(PostResponseActivity.this, "Error occurred while sending the data. " +
+                    Toast.makeText(PostRequestActivity.this, "Error occurred while sending the data. " +
                                     "Check your internet connection or contact Mikko Paakkonen!",
                             Toast.LENGTH_LONG).show();
                 }
@@ -164,7 +160,7 @@ public class PostResponseActivity extends AppCompatActivity {
 
         });
 
-        saMiViewModel.getPostResponseMeasurement().observe(PostResponseActivity.this, postedMeasurement -> {
+        saMiViewModel.getPostResponseMeasurement().observe(PostRequestActivity.this, postedMeasurement -> {
             if(postedMeasurement != null) {
                 responseMeasurement = postedMeasurement.get(0);
                 try {

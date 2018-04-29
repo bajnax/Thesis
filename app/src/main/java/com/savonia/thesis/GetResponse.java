@@ -1,52 +1,75 @@
 package com.savonia.thesis;
 
+
 import android.arch.lifecycle.ViewModelProviders;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
-import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.webclient.measuremetsmodels.DataModel;
-import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
-public class GetResponseActivity extends AppCompatActivity {
 
-    private static final String TAG = GetResponseActivity.class.getSimpleName();
+public class GetResponse extends Fragment {
 
-    private SaMiViewModel saMiViewModel;
-    private List<MeasurementsModel> measurementsModelList;
+    private static final String TAG = GetResponse.class.getSimpleName();
+    private static final String ARG_PARAM1 = "param1";
+
+    private String mParam1;
+
+    private View rootView;
 
     private GraphView measurementsGraph;
     private PointsGraphSeries<DataPoint> gasSeries;
     private PointsGraphSeries<DataPoint> temperatureSeries;
-    private SimpleDateFormat mDateFormatter;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable mTimer1;
     private Runnable mTimer2;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_get_response);
+    public GetResponse() {
+        // Required empty public constructor
+    }
 
-        measurementsGraph = (GraphView)findViewById(R.id.measurementsGraph);
+
+    public static GetResponse newInstance(String param1) {
+        GetResponse fragment = new GetResponse();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            mParam1 = getArguments().getString(ARG_PARAM1);
+        }
+        setRetainInstance(true);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        rootView = inflater.inflate(R.layout.fragment_get_response, container, false);
+
+        measurementsGraph = (GraphView)rootView.findViewById(R.id.measurementsGraph);
         //mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
-        measurementsGraph.setTitle("Current sensors data");
+        measurementsGraph.setTitle("Get response data");
         measurementsGraph.setTitleColor(R.color.colorPrimaryDark);
         measurementsGraph.getGridLabelRenderer().setVerticalAxisTitle("Value");
         measurementsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Id");
@@ -61,23 +84,6 @@ public class GetResponseActivity extends AppCompatActivity {
         measurementsGraph.getViewport().setMinY(0);
         measurementsGraph.getViewport().setMaxY(400);
 
-        /*// set date label formatter
-        measurementsGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(GetResponseActivity.this, mDateFormatter));
-        measurementsGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
-
-        Calendar calendar = Calendar.getInstance();
-        long t1 = calendar.getTimeInMillis();
-        long t2 = calendar.getTimeInMillis() + 15000;
-
-        measurementsGraph.getViewport().setXAxisBoundsManual(true);
-        measurementsGraph.getViewport().setMinX((double)t1);
-        measurementsGraph.getViewport().setMaxX(((double)t2));
-
-
-        // as we use dates as labels, the human rounding to nice readable numbers
-        // is not necessary
-        measurementsGraph.getGridLabelRenderer().setHumanRounding(false);*/
-
         temperatureSeries = new PointsGraphSeries<>();
         measurementsGraph.addSeries(temperatureSeries);
 
@@ -91,29 +97,29 @@ public class GetResponseActivity extends AppCompatActivity {
         gasSeries.setColor(Color.RED);
         measurementsGraph.getGridLabelRenderer().setVerticalLabelsSecondScaleColor(Color.RED);
 
+        final SaMiViewModel saMiViewModel = ViewModelProviders.of(GetResponse.this).get(SaMiViewModel.class);
 
-        saMiViewModel = ViewModelProviders.of(GetResponseActivity.this).get(SaMiViewModel.class);
-
-        saMiViewModel.makeGetRequest();
-        saMiViewModel.getMeasurements().observe(GetResponseActivity.this, measurementsModels -> {
-            measurementsModelList = measurementsModels;
+        saMiViewModel.getMeasurements().observe(GetResponse.this, measurementsModels -> {
             try {
 
-                if(measurementsModelList != null) {
+                if(measurementsModels != null) {
 
-                    for (int i = 0; i < measurementsModelList.size(); i++) {
-                        for (int j = 0; j < measurementsModelList.get(i).getData().size(); j++) {
+                    // TODO: Split the measurement into temperature and gas series
+
+                    for (int i = 0; i < measurementsModels.size(); i++) {
+                        for (int j = 0; j < measurementsModels.get(i).getData().size(); j++) {
                             Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED (" + i + ", " + j + ")" +
-                                    measurementsModelList.get(i).getData().get(j).getValue());
+                                    measurementsModels.get(i).getData().get(j).getValue());
+
                         }
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        for (int j = 0; j < measurementsModelList.get(i).getData().size(); j++) {
+                        for (int j = 0; j < measurementsModels.get(i).getData().size(); j++) {
                             if (i == 0) {//temp
-                                displayTemperatures(measurementsModelList.get(i).getData());
+                                displayTemperatures(measurementsModels.get(i).getData());
                             } else { //gas
-                                displayGases(measurementsModelList.get(i).getData());
+                                displayGases(measurementsModels.get(i).getData());
                             }
                         }
                     }
@@ -125,6 +131,7 @@ public class GetResponseActivity extends AppCompatActivity {
             }
         });
 
+        return rootView;
     }
 
 
@@ -174,7 +181,6 @@ public class GetResponseActivity extends AppCompatActivity {
         mHandler.post(mTimer2);
 
     }
-
 
     @Override
     public void onStop() {

@@ -41,6 +41,13 @@
     <string name="temperature_tag">Temperature tag</string>
     <string name="gas_tag">Gas tag</string>
     <string name="post_button_text">Send</string>
+    <string name="get_button_text">Get</string>
+    <string name="key">Key</string>
+    <string name="key_password">savoniatest</string>
+    <string name="take_amount">20</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 
 </resources>

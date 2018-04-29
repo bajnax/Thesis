@@ -90,7 +90,7 @@ public class CentralRepository {
 
 
     public void insertTemperature(Temperature temperature) {
-        //mDatabase.getTemperatureDao().insert(temperature);
+        //mDatabase.getTemperatureDao().insert(temperature); // old synchronous way
         new insertAsyncTemperature(mDatabase.getTemperatureDao()).execute(temperature);
     }
 
@@ -104,7 +104,7 @@ public class CentralRepository {
 
 
     public void insertGas(Gas gas) {
-        //mDatabase.getGasDao().insert(gas);
+        //mDatabase.getGasDao().insert(gas); // old synchronous way
         new insertAsyncGas(mDatabase.getGasDao()).execute(gas);
     }
 
@@ -262,7 +262,7 @@ public class CentralRepository {
             public void onResponse(Call<String> call, Response<String> response) {
 
                 if(response.isSuccessful()) {
-                    // TODO: read server response as a text!
+                    // TODO: read server response as a text!?
                     //mObservablePostResponse.setValue(response.body().getMeasurements());
                     Log.d(TAG, "success " + response.body());
                     responseStatus.setValue(1);
@@ -274,6 +274,7 @@ public class CentralRepository {
                 Log.d(TAG, "RESPONSE MESSAGE: " + response.message());
                 mObservableAsyncTemperaturesList.setValue(null);
                 mObservableAsyncGasesList.setValue(null);
+                responseStatus.setValue(0);
             }
 
             @Override
@@ -283,6 +284,7 @@ public class CentralRepository {
                 responseStatus.setValue(2);
                 mObservableAsyncTemperaturesList.setValue(null);
                 mObservableAsyncGasesList.setValue(null);
+                responseStatus.setValue(0);
             }
         });
     }

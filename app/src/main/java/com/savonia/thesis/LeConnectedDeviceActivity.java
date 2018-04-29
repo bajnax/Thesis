@@ -3,7 +3,6 @@ package com.savonia.thesis;
 import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -39,11 +38,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.viewmodels.SharedViewModel;
-import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
-
-import java.util.List;
 
 public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFragmentInteractionListener<Object> {
 
@@ -663,10 +658,9 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                         });
                         return false;
                     case R.id.sendToSami:
-                        // TODO: POST request
                         try {
                             Intent connectToDevice = new Intent();
-                            connectToDevice.setClass(LeConnectedDeviceActivity.this, PostResponseActivity.class);
+                            connectToDevice.setClass(LeConnectedDeviceActivity.this, PostRequestActivity.class);
                             startActivity(connectToDevice);
 
                         } catch (Exception ex) {
@@ -677,7 +671,7 @@ public class LeConnectedDeviceActivity extends AppCompatActivity implements OnFr
                         try {
 
                             Intent connectToDevice = new Intent();
-                            connectToDevice.setClass(LeConnectedDeviceActivity.this, GetResponseActivity.class);
+                            connectToDevice.setClass(LeConnectedDeviceActivity.this, GetRequestActivity.class);
                             startActivity(connectToDevice);
 
                         } catch (Exception ex) {

@@ -26,6 +26,7 @@ public class PostRequestActivity extends AppCompatActivity {
     private SaMiViewModel saMiViewModel;
     private MeasurementsModel initialMeasurement;
     private MeasurementsModel responseMeasurement;
+    private List<DataModel> dataModelList;
     private EditText measurementNameEdTxt;
     private EditText measurementTagEdTxt;
     private EditText temperatureTagEdTxt;
@@ -50,6 +51,9 @@ public class PostRequestActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 initialMeasurement = null;
+                dataModelList = null;
+
+                dataModelList = new ArrayList<DataModel>();
 
                 // generating a measurement model
                 initialMeasurement = new MeasurementsModel();
@@ -70,8 +74,6 @@ public class PostRequestActivity extends AppCompatActivity {
                 Log.d(TAG, "Current date and time: " + currentDateAndTime);
                 initialMeasurement.setTimestampISO8601(currentDateAndTime);
                 //initialMeasurement.setTimestampISO8601("2018-04-28T17:48:19+03:00");
-                List<DataModel> dataModelList = new ArrayList<>();
-                initialMeasurement.setData(dataModelList);
 
                 saMiViewModel.generateTemperatureMeasurementAsync();
             }
@@ -98,7 +100,7 @@ public class PostRequestActivity extends AppCompatActivity {
                             Log.d(TAG, "Temperature value: " + temperatures.get(i).getTemperatureValue());
                             dm.setTag(tag);
                             dm.setValue(temperatures.get(i).getTemperatureValue());
-                            initialMeasurement.getData().add(dm);
+                            dataModelList.add(dm);
                         }
                     }
 
@@ -130,9 +132,11 @@ public class PostRequestActivity extends AppCompatActivity {
                             Log.d(TAG, "Gas value: " + gases.get(i).getGasValue());
                             dm.setTag(tag);
                             dm.setValue(gases.get(i).getGasValue());
-                            initialMeasurement.getData().add(dm);
+                            dataModelList.add(dm);
                         }
                     }
+
+                    initialMeasurement.setData(dataModelList);
 
                     Log.d(TAG, "SENDING GENERATED TEMPERATURE AND/OR GAS MEASUREMENT VIA POST REQUEST");
                     // sending generated measurement to the SaMi cloud via POST request

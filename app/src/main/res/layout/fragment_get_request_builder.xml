@@ -52,6 +52,34 @@
         app:layout_constraintTop_toBottomOf="@+id/measurementName" />
 
     <EditText
+        android:id="@+id/fromDate"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:ems="10"
+        android:inputType="date"
+        android:hint="@string/from_date"
+        app:layout_constraintHeight_default="wrap"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/measurementTag" />
+
+    <EditText
+        android:id="@+id/toDate"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:ems="10"
+        android:inputType="date"
+        android:hint="@string/to_date"
+        app:layout_constraintHeight_default="wrap"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fromDate" />
+
+    <EditText
         android:id="@+id/takeAmount"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -63,7 +91,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/measurementTag" />
+        app:layout_constraintTop_toBottomOf="@+id/toDate" />
 
     <EditText
         android:id="@+id/temperatureTag"

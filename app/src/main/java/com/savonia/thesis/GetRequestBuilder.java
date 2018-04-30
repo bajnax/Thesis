@@ -25,6 +25,8 @@ public class GetRequestBuilder extends Fragment {
     private EditText measurementTagEdTxt;
     private EditText temperatureTagEdTxt;
     private EditText gasTagEdTxt;
+    private EditText fromDate;
+    private EditText toDate;
     private EditText takeAmountEdTxt;
     private EditText keyEdTxt;
 
@@ -69,10 +71,11 @@ public class GetRequestBuilder extends Fragment {
         measurementNameEdTxt = (EditText) rootView.findViewById(R.id.measurementName);
         measurementTagEdTxt = (EditText) rootView.findViewById(R.id.measurementTag);
         temperatureTagEdTxt = (EditText) rootView.findViewById(R.id.temperatureTag);
+        fromDate = (EditText) rootView.findViewById(R.id.fromDate);
+        toDate = (EditText) rootView.findViewById(R.id.toDate);
         takeAmountEdTxt = (EditText) rootView.findViewById(R.id.takeAmount);
         keyEdTxt = (EditText) rootView.findViewById(R.id.key);
         gasTagEdTxt = (EditText) rootView.findViewById(R.id.gasTag);
-
         final SaMiViewModel saMiViewModel = ViewModelProviders.of(getActivity()).get(SaMiViewModel.class);
 
         getButton.setOnClickListener(new View.OnClickListener() {
@@ -86,6 +89,8 @@ public class GetRequestBuilder extends Fragment {
                     String key = "";
                     String measurementName = "";
                     String measurementTag = "";
+                    String fromDateString = "";
+                    String toDateString = "";
                     Integer takeAmount = 0;
 
                     if (keyEdTxt.getText().toString().trim().length() > 0) {
@@ -105,6 +110,16 @@ public class GetRequestBuilder extends Fragment {
                     if (measurementTagEdTxt.getText().toString().trim().length() > 0) {
                         measurementTag = measurementTagEdTxt.getText().toString().trim();
                         getRequestViewModel.setMeasurementTag(measurementTagEdTxt.getText().toString().trim());
+                    }
+
+                    if(fromDate.getText().toString().trim().length() >= 10) {
+                        fromDateString = fromDate.getText().toString().trim();
+                    } else {
+                        fromDateString = getResources().getString(R.string.from_date);
+                    }
+
+                    if(toDate.getText().toString().trim().length() >= 10) {
+                        toDateString = toDate.getText().toString().trim();
                     }
 
                     if (takeAmountEdTxt.getText().toString().trim().length() > 0) {
@@ -134,7 +149,8 @@ public class GetRequestBuilder extends Fragment {
 
                     // TODO: create proper get request from the edit texts (temperature and gas tags and a key must be always present!)
                     saMiViewModel.makeGetRequest(key.isEmpty() ? null : key, measurementName.isEmpty() ? null : measurementName,
-                            measurementTag.isEmpty() ? null : measurementTag, takeAmount == 0 ? null : takeAmount,
+                            measurementTag.isEmpty() ? null : measurementTag, fromDateString.isEmpty() ? null : fromDateString,
+                            toDateString.isEmpty() ? null : toDateString, takeAmount == 0 ? null : takeAmount,
                             dataTags.isEmpty() ? null : dataTags);
 
                 } catch(Exception ex) {

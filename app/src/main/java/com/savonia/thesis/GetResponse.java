@@ -71,14 +71,14 @@ public class GetResponse extends Fragment {
         setRetainInstance(true);
         getRequestViewModel = ViewModelProviders.of(getActivity()).get(GetRequestViewModel.class);
 
-        getRequestViewModel.getTemperatureTag().observe(this, new Observer<String>() {
+        getRequestViewModel.getTemperatureTag().observe(getActivity(), new Observer<String>() {
             @Override
             public void onChanged(@NonNull String tag) {
                 temperatureTag = tag;
             }
         });
 
-        getRequestViewModel.getGasTag().observe(this, new Observer<String>() {
+        getRequestViewModel.getGasTag().observe(getActivity(), new Observer<String>() {
             @Override
             public void onChanged(@NonNull String tag) {
                 gasTag = tag;
@@ -132,6 +132,9 @@ public class GetResponse extends Fragment {
                 if(measurementsModels != null) {
 
                     Log.d(TAG, "Received GET response");
+
+                    Log.d(TAG, "measurementsModels size: " + measurementsModels.size());
+                    Log.d(TAG, "DataList size: " + measurementsModels.get(0).getData().size());
 
                     temperaturesList = new ArrayList<DataModel>();
                     gasesList = new ArrayList<DataModel>();
@@ -212,8 +215,8 @@ public class GetResponse extends Fragment {
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onDetach() {
+        super.onDetach();
         mHandler.removeCallbacks(mTimer1);
         mHandler.removeCallbacks(mTimer2);
     }

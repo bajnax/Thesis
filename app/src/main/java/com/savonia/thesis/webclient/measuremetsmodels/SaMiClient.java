@@ -24,9 +24,9 @@ public interface SaMiClient {
             "Host: sami.savonia.fi",
             "Content-Type: text/json"
     })
-    @GET("json/measurements/") // TODO: check if problem is in the key (not query)
-    Call<List<MeasurementsModel>> getMeasurements(@Query("key") String key, @Query("obj") String measName,
-    @Query("tag") String measTag, @Query("take") Integer take, @Query("data-tags") String dataTags);
+    @GET("json/measurements/{key}?")
+    Call<List<MeasurementsModel>> getMeasurements(@Path("key") String key, @Query("obj") String measName,
+    @Query("tag") String measTag, @Query("from") String fromDate, @Query("to") String toDate, @Query("take") Integer take, @Query("data-tags") String dataTags);
 
 
     @Headers({

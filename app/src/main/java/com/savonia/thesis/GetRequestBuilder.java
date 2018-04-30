@@ -11,12 +11,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.savonia.thesis.viewmodels.GetRequestViewModel;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 
 
 public class GetRequestBuilder extends Fragment {
-
-    // TODO: modify layout and compare tags to assign values to the graph appropriately (save them on button click and then compare received tags with the saved ones)
 
     private static final String ARG_PARAM1 = "param1";
     private static final String TAG = GetRequestBuilder.class.getSimpleName();
@@ -29,6 +28,7 @@ public class GetRequestBuilder extends Fragment {
     private EditText takeAmountEdTxt;
     private EditText keyEdTxt;
 
+    private GetRequestViewModel getRequestViewModel;
 
     private View rootView;
 
@@ -56,6 +56,7 @@ public class GetRequestBuilder extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
         setRetainInstance(true);
+        getRequestViewModel = ViewModelProviders.of(getActivity()).get(GetRequestViewModel.class);
     }
 
     @Override
@@ -72,13 +73,73 @@ public class GetRequestBuilder extends Fragment {
         keyEdTxt = (EditText) rootView.findViewById(R.id.key);
         gasTagEdTxt = (EditText) rootView.findViewById(R.id.gasTag);
 
-        final SaMiViewModel saMiViewModel = ViewModelProviders.of(GetRequestBuilder.this).get(SaMiViewModel.class);
+        final SaMiViewModel saMiViewModel = ViewModelProviders.of(getActivity()).get(SaMiViewModel.class);
 
         getButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: create proper get request from the edit texts
-                saMiViewModel.makeGetRequest();
+
+                try {
+
+                    Log.d(TAG, "Generating the GET request!");
+
+                    String key = "";
+                    String measurementName = "";
+                    String measurementTag = "";
+                    Integer takeAmount = 0;
+
+                    if (keyEdTxt.getText().toString().trim().length() > 0) {
+                        key = keyEdTxt.getText().toString().trim();
+                        getRequestViewModel.setKey(keyEdTxt.getText().toString().trim());
+                    }
+                    else {
+                        key = getResources().getString(R.string.key_password);
+                        getRequestViewModel.setKey(getResources().getString(R.string.key_password));
+                    }
+
+                    if (measurementNameEdTxt.getText().toString().trim().length() > 0) {
+                        measurementName = measurementNameEdTxt.getText().toString().trim();
+                        getRequestViewModel.setMeasurementName(measurementNameEdTxt.getText().toString().trim());
+                    }
+
+                    if (measurementTagEdTxt.getText().toString().trim().length() > 0) {
+                        measurementTag = measurementTagEdTxt.getText().toString().trim();
+                        getRequestViewModel.setMeasurementTag(measurementTagEdTxt.getText().toString().trim());
+                    }
+
+                    if (takeAmountEdTxt.getText().toString().trim().length() > 0) {
+                        takeAmount = Integer.parseInt(takeAmountEdTxt.getText().toString().trim());
+                        getRequestViewModel.setTakeAmount(Integer.parseInt(takeAmountEdTxt.getText().toString().trim()));
+                    }
+
+                    String dataTags = "";
+                    StringBuilder sb = new StringBuilder();
+
+                    if (temperatureTagEdTxt.getText().toString().trim().length() > 0) {
+                        sb.append(temperatureTagEdTxt.getText().toString().trim());
+                        getRequestViewModel.setTemperatureTag(temperatureTagEdTxt.getText().toString().trim());
+                    }
+
+                    if (gasTagEdTxt.getText().toString().trim().length() > 0) {
+                        if(sb.length() > 0)
+                            sb.append(";" + gasTagEdTxt.getText().toString().trim());
+                        else
+                            sb.append(gasTagEdTxt.getText().toString().trim());
+
+                        getRequestViewModel.setGasTag(gasTagEdTxt.getText().toString().trim());
+                    }
+
+                    Log.d(TAG, "String Builder: " + sb.toString());
+                    dataTags = sb.toString();
+
+                    // TODO: create proper get request from the edit texts (temperature and gas tags and a key must be always present!)
+                    saMiViewModel.makeGetRequest(key.isEmpty() ? null : key, measurementName.isEmpty() ? null : measurementName,
+                            measurementTag.isEmpty() ? null : measurementTag, takeAmount == 0 ? null : takeAmount,
+                            dataTags.isEmpty() ? null : dataTags);
+
+                } catch(Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
         return rootView;

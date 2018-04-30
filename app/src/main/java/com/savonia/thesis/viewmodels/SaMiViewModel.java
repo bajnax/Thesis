@@ -34,8 +34,8 @@ public class SaMiViewModel extends AndroidViewModel {
 
 
     // GET request
-    public void makeGetRequest() {
-        mRepository.makeGetRequest();
+    public void makeGetRequest(String key, String measName, String measTag, Integer takeAmount, String dataTags) {
+        mRepository.makeGetRequest(key, measName, measTag, takeAmount, dataTags);
     }
 
     public LiveData<List<MeasurementsModel>> getMeasurements() {

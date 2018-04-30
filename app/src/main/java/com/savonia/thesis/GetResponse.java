@@ -1,11 +1,13 @@
 package com.savonia.thesis;
 
 
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,9 +17,11 @@ import android.view.ViewGroup;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.PointsGraphSeries;
+import com.savonia.thesis.viewmodels.GetRequestViewModel;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.webclient.measuremetsmodels.DataModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -29,10 +33,17 @@ public class GetResponse extends Fragment {
     private String mParam1;
 
     private View rootView;
+    private GetRequestViewModel getRequestViewModel;
 
     private GraphView measurementsGraph;
     private PointsGraphSeries<DataPoint> gasSeries;
     private PointsGraphSeries<DataPoint> temperatureSeries;
+
+    private String temperatureTag;
+    private String gasTag;
+    private List<DataModel> temperaturesList;
+    private List<DataModel> gasesList;
+
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable mTimer1;
@@ -58,6 +69,22 @@ public class GetResponse extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
         setRetainInstance(true);
+        getRequestViewModel = ViewModelProviders.of(getActivity()).get(GetRequestViewModel.class);
+
+        getRequestViewModel.getTemperatureTag().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@NonNull String tag) {
+                temperatureTag = tag;
+            }
+        });
+
+        getRequestViewModel.getGasTag().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(@NonNull String tag) {
+                gasTag = tag;
+            }
+        });
+
     }
 
     @Override
@@ -97,32 +124,34 @@ public class GetResponse extends Fragment {
         gasSeries.setColor(Color.RED);
         measurementsGraph.getGridLabelRenderer().setVerticalLabelsSecondScaleColor(Color.RED);
 
-        final SaMiViewModel saMiViewModel = ViewModelProviders.of(GetResponse.this).get(SaMiViewModel.class);
+        final SaMiViewModel saMiViewModel = ViewModelProviders.of(getActivity()).get(SaMiViewModel.class);
 
-        saMiViewModel.getMeasurements().observe(GetResponse.this, measurementsModels -> {
+        saMiViewModel.getMeasurements().observe(getActivity(), measurementsModels -> {
             try {
 
                 if(measurementsModels != null) {
 
-                    // TODO: Split the measurement into temperature and gas series
+                    Log.d(TAG, "Received GET response");
+
+                    temperaturesList = new ArrayList<DataModel>();
+                    gasesList = new ArrayList<DataModel>();
 
                     for (int i = 0; i < measurementsModels.size(); i++) {
                         for (int j = 0; j < measurementsModels.get(i).getData().size(); j++) {
                             Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED (" + i + ", " + j + ")" +
                                     measurementsModels.get(i).getData().get(j).getValue());
 
+                            if(temperatureTag != null && measurementsModels.get(i).getData().get(j).getTag().equals(temperatureTag)) {
+                                temperaturesList.add(measurementsModels.get(i).getData().get(j));
+                            } else if(gasTag != null && measurementsModels.get(i).getData().get(j).getTag().equals(gasTag)) {
+                                gasesList.add(measurementsModels.get(i).getData().get(j));
+                            }
+
                         }
                     }
 
-                    for (int i = 0; i < 2; i++) {
-                        for (int j = 0; j < measurementsModels.get(i).getData().size(); j++) {
-                            if (i == 0) {//temp
-                                displayTemperatures(measurementsModels.get(i).getData());
-                            } else { //gas
-                                displayGases(measurementsModels.get(i).getData());
-                            }
-                        }
-                    }
+                    displayTemperatures(temperaturesList);
+                    displayGases(gasesList);
 
                 }
 

@@ -226,18 +226,20 @@ public class CentralRepository {
 
 
     // WebService related methods
-    public void makeGetRequest() {
+    public void makeGetRequest(String key, String measName, String measTag, Integer takeAmount, String dataTags) {
         mObservableGetMeasurements.setValue(null);
 
-        saMiClient.getMeasurements().enqueue(new Callback<List<MeasurementsModel>>() {
+        saMiClient.getMeasurements(key, measName, measTag, takeAmount, dataTags).enqueue(new Callback<List<MeasurementsModel>>() {
             @Override
             public void onResponse(Call<List<MeasurementsModel>> call, Response<List<MeasurementsModel>> response) {
+                Log.d(TAG, "on GET response");
                 if(response.isSuccessful())
                     mObservableGetMeasurements.setValue(response.body());
             }
 
             @Override
             public void onFailure(Call<List<MeasurementsModel>> call, Throwable throwable) {
+                Log.d(TAG, "on GET failure");
                 System.out.println(throwable.toString());
             }
         });
@@ -262,7 +264,7 @@ public class CentralRepository {
             public void onResponse(Call<String> call, Response<String> response) {
 
                 if(response.isSuccessful()) {
-                    // TODO: read server response as a text!?
+                    // TODO: read server response as a text (mb postman)!?
                     //mObservablePostResponse.setValue(response.body().getMeasurements());
                     Log.d(TAG, "success " + response.body());
                     responseStatus.setValue(1);

@@ -20,6 +20,7 @@ import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.savonia.thesis.viewmodels.GetRequestViewModel;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.webclient.measuremetsmodels.DataModel;
+import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,7 @@ public class GetResponse extends Fragment {
             @Override
             public void onChanged(@NonNull String tag) {
                 temperatureTag = tag;
+                Log.d(TAG, "Temperature tag: " + temperatureTag);
             }
         });
 
@@ -82,6 +84,7 @@ public class GetResponse extends Fragment {
             @Override
             public void onChanged(@NonNull String tag) {
                 gasTag = tag;
+                Log.d(TAG, "Gas tag: " + gasTag);
             }
         });
 
@@ -106,23 +109,31 @@ public class GetResponse extends Fragment {
 
         measurementsGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
         measurementsGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
-
+        measurementsGraph.getGridLabelRenderer().setLabelsSpace(20);
         measurementsGraph.getViewport().setYAxisBoundsManual(true);
-        measurementsGraph.getViewport().setMinY(0);
-        measurementsGraph.getViewport().setMaxY(400);
-
-        temperatureSeries = new PointsGraphSeries<>();
-        measurementsGraph.addSeries(temperatureSeries);
-
 
         gasSeries = new PointsGraphSeries<>();
-        // set gas at the second scale
-        measurementsGraph.getSecondScale().addSeries(gasSeries);
+        temperatureSeries = new PointsGraphSeries<>();
+
+        // set temperatures at the second scale
+        measurementsGraph.getSecondScale().addSeries(temperatureSeries);
         // the y bounds are always manual for second scale
-        measurementsGraph.getSecondScale().setMinY(0);
-        measurementsGraph.getSecondScale().setMaxY(400);
+        measurementsGraph.getSecondScale().setMinY(-15);
+        measurementsGraph.getSecondScale().setMaxY(50);
+        gasSeries.setColor(Color.BLUE);
+        measurementsGraph.getGridLabelRenderer().setVerticalLabelsSecondScaleColor(Color.BLUE);
+
+        // set gases at the first scale
+        measurementsGraph.getViewport().setMinY(0);
+        measurementsGraph.getViewport().setMaxY(800);
         gasSeries.setColor(Color.RED);
-        measurementsGraph.getGridLabelRenderer().setVerticalLabelsSecondScaleColor(Color.RED);
+        measurementsGraph.getGridLabelRenderer().setVerticalLabelsColor(Color.RED);
+        measurementsGraph.addSeries(gasSeries);
+
+        // set manual bounds for X-axes
+        measurementsGraph.getViewport().setXAxisBoundsManual(true);
+        measurementsGraph.getViewport().setMinX(0);
+        measurementsGraph.getViewport().setMaxX(10);
 
         final SaMiViewModel saMiViewModel = ViewModelProviders.of(getActivity()).get(SaMiViewModel.class);
 
@@ -134,24 +145,22 @@ public class GetResponse extends Fragment {
                     Log.d(TAG, "Received GET response");
 
                     Log.d(TAG, "measurementsModels size: " + measurementsModels.size());
-                    Log.d(TAG, "DataList size: " + measurementsModels.get(0).getData().size());
 
                     temperaturesList = new ArrayList<DataModel>();
                     gasesList = new ArrayList<DataModel>();
 
-                    for (int i = 0; i < measurementsModels.size(); i++) {
-                        for (int j = 0; j < measurementsModels.get(i).getData().size(); j++) {
-                            Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED (" + i + ", " + j + ")" +
-                                    measurementsModels.get(i).getData().get(j).getValue());
-
-                            if(temperatureTag != null && measurementsModels.get(i).getData().get(j).getTag().equals(temperatureTag)) {
-                                temperaturesList.add(measurementsModels.get(i).getData().get(j));
-                            } else if(gasTag != null && measurementsModels.get(i).getData().get(j).getTag().equals(gasTag)) {
-                                gasesList.add(measurementsModels.get(i).getData().get(j));
+                    for (MeasurementsModel currentMeasModel: measurementsModels) {
+                        for (DataModel currentDataModel: currentMeasModel.getData()) {
+                            Log.d(TAG, "RESPONSE FROM GET REQUEST RECEIVED " + currentDataModel.getValue());
+                            if(temperatureTag != null && currentDataModel.getTag().equals(temperatureTag)) {
+                                temperaturesList.add(currentDataModel);
+                            } else if(gasTag != null && currentDataModel.getTag().equals(gasTag)) {
+                                gasesList.add(currentDataModel);
                             }
 
                         }
                     }
+                    measurementsGraph.getViewport().setMaxX(measurementsModels.size());
 
                     displayTemperatures(temperaturesList);
                     displayGases(gasesList);

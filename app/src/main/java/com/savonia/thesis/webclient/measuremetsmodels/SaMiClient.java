@@ -5,6 +5,7 @@ import android.arch.lifecycle.LiveData;
 import java.util.HashMap;
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -26,7 +27,16 @@ public interface SaMiClient {
     })
     @GET("json/measurements/{key}?")
     Call<List<MeasurementsModel>> getMeasurements(@Path("key") String key, @Query("obj") String measName,
-    @Query("tag") String measTag, @Query("from") String fromDate, @Query("to") String toDate, @Query("take") Integer take, @Query("data-tags") String dataTags);
+        @Query("tag") String measTag, @Query("from") String fromDate, @Query("to") String toDate, @Query("take") Integer take, @Query("data-tags") String dataTags);
+
+    @Headers({
+            "User-Agent: Fiddler",
+            "Host: sami.savonia.fi",
+            "Content-Type: text/json"
+    })
+    @GET("json/measurements/{key}?")
+    Call<ResponseBody> getMeasurementsAsString(@Path("key") String key, @Query("obj") String measName,
+        @Query("tag") String measTag, @Query("from") String fromDate, @Query("to") String toDate, @Query("take") Integer take, @Query("data-tags") String dataTags);
 
 
     @Headers({
@@ -35,5 +45,5 @@ public interface SaMiClient {
             "Content-Type: text/json"
     })
     @POST("json/measurements/save")
-    Call<String> postMeasurements(@Body MeasurementsPackage measurementsPackage);
+    Call<ResponseBody> postMeasurements(@Body MeasurementsPackage measurementsPackage);
 }

@@ -9,6 +9,8 @@ import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.db.entity.Temperature;
 import com.savonia.thesis.repository.CentralRepository;
 import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class SaMiViewModel extends AndroidViewModel {
@@ -60,7 +62,7 @@ public class SaMiViewModel extends AndroidViewModel {
         return gasListAsync;
     }
 
-    public void makePostRequest(String key, MeasurementsModel postedMeasurement) {
+    public void makePostRequest(String key, ArrayList<MeasurementsModel> postedMeasurement) {
         mRepository.makePostRequest(key, postedMeasurement);
     }
 

@@ -14,11 +14,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.DataPointInterface;
+import com.jjoe64.graphview.series.OnDataPointTapListener;
 import com.jjoe64.graphview.series.PointsGraphSeries;
+import com.jjoe64.graphview.series.Series;
 import com.savonia.thesis.db.entity.Gas;
 import com.savonia.thesis.viewmodels.SensorsDataViewModel;
 import com.savonia.thesis.viewmodels.SharedViewModel;
@@ -95,8 +99,9 @@ public class GasFragment extends Fragment {
         // enabling horizontal zooming and scrolling
         gasGraph.getViewport().setScrollable(true);
 
-        gasGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
+        /*gasGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
         gasGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
+        gasGraph.getGridLabelRenderer().setLabelsSpace(20);*/
 
         gasGraph.getViewport().setYAxisBoundsManual(true);
         gasGraph.getViewport().setMinY(0);
@@ -105,7 +110,7 @@ public class GasFragment extends Fragment {
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         gasGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
-        gasGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
+        gasGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // only 4 because of the space
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
@@ -121,6 +126,13 @@ public class GasFragment extends Fragment {
         gasGraph.getGridLabelRenderer().setHumanRounding(false);
 
         gasSeries = new PointsGraphSeries<>();
+        gasSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
+            @Override
+            public void onTap(Series series, DataPointInterface dataPoint) {
+                Toast.makeText(getActivity(), "Measurement time: "+ mDateFormatter.format(dataPoint.getX()) +
+                        "\nGas value (ppm): " + dataPoint.getY(), Toast.LENGTH_SHORT).show();
+            }
+        });
         gasGraph.addSeries(gasSeries);
 
         final SensorsDataViewModel sensorsDataViewModel =

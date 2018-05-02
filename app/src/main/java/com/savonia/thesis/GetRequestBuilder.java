@@ -95,12 +95,11 @@ public class GetRequestBuilder extends Fragment {
 
                     if (keyEdTxt.getText().toString().trim().length() > 0) {
                         key = keyEdTxt.getText().toString().trim();
-                        getRequestViewModel.setKey(keyEdTxt.getText().toString().trim());
                     }
                     else {
                         key = getResources().getString(R.string.key_password);
-                        getRequestViewModel.setKey(getResources().getString(R.string.key_password));
                     }
+                    getRequestViewModel.setKey(key);
 
                     if (measurementNameEdTxt.getText().toString().trim().length() > 0) {
                         measurementName = measurementNameEdTxt.getText().toString().trim();
@@ -114,9 +113,9 @@ public class GetRequestBuilder extends Fragment {
 
                     if(fromDate.getText().toString().trim().length() >= 10) {
                         fromDateString = fromDate.getText().toString().trim();
-                    } else {
+                    } /*else {
                         fromDateString = getResources().getString(R.string.from_date);
-                    }
+                    }*/
 
                     if(toDate.getText().toString().trim().length() >= 10) {
                         toDateString = toDate.getText().toString().trim();

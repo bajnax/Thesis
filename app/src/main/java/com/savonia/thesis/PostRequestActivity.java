@@ -9,6 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.savonia.thesis.db.entity.Gas;
+import com.savonia.thesis.db.entity.Temperature;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.webclient.measuremetsmodels.DataModel;
 import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
@@ -18,19 +20,24 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
 public class PostRequestActivity extends AppCompatActivity {
 
     private static final String TAG = PostRequestActivity.class.getSimpleName();
 
     private SaMiViewModel saMiViewModel;
-    private MeasurementsModel initialMeasurement;
+    private List<Temperature> temperatureList;
+    private List<Gas> gasList;
+    private String measurementTag = "";
+    private String measurementName = "";
     private MeasurementsModel responseMeasurement;
-    private List<DataModel> dataModelList;
+    private ArrayList<MeasurementsModel> initialMeasurements;
     private EditText measurementNameEdTxt;
     private EditText measurementTagEdTxt;
     private EditText temperatureTagEdTxt;
     private EditText gasTagEdTxt;
+    private SimpleDateFormat simpleDateFormat;
     private Button sendButton;
 
     @Override
@@ -44,35 +51,33 @@ public class PostRequestActivity extends AppCompatActivity {
         gasTagEdTxt = (EditText) findViewById(R.id.gasTag);
         sendButton = (Button) findViewById(R.id.postButton);
 
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
+
+
         saMiViewModel = ViewModelProviders.of(PostRequestActivity.this).get(SaMiViewModel.class);
 
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                initialMeasurement = null;
-                dataModelList = null;
-
-                dataModelList = new ArrayList<DataModel>();
-
-                // generating a measurement model
-                initialMeasurement = new MeasurementsModel();
+                initialMeasurements = null;
+                initialMeasurements = new ArrayList<MeasurementsModel>();
 
                 if(measurementNameEdTxt.getText().toString().trim().length() > 0)
-                    initialMeasurement.setObject(measurementNameEdTxt.getText().toString().trim());
+                    measurementName = measurementNameEdTxt.getText().toString().trim();
                 else
-                    initialMeasurement.setObject(getResources().getString(R.string.measurement_name));
+                    measurementName = getResources().getString(R.string.measurement_name);
 
                 if(measurementTagEdTxt.getText().toString().trim().length() > 0)
-                    initialMeasurement.setTag(measurementTagEdTxt.getText().toString().trim());
+                    measurementTag = measurementTagEdTxt.getText().toString().trim();
                 else
-                    initialMeasurement.setTag(getResources().getString(R.string.measurement_tag));
+                    measurementTag = getResources().getString(R.string.measurement_tag);
 
-                Date date = GregorianCalendar.getInstance().getTime();
-                String currentDateAndTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+                /*Date date = GregorianCalendar.getInstance().getTime();
+                String currentDateAndTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH)
                         .format(date);
-                Log.d(TAG, "Current date and time: " + currentDateAndTime);
-                initialMeasurement.setTimestampISO8601(currentDateAndTime);
+                Log.d(TAG, "Current date and time: " + currentDateAndTime);*/
+                //initialMeasurement.setTimestampISO8601(currentDateAndTime);
                 //initialMeasurement.setTimestampISO8601("2018-04-28T17:48:19+03:00");
 
                 saMiViewModel.generateTemperatureMeasurementAsync();
@@ -84,26 +89,7 @@ public class PostRequestActivity extends AppCompatActivity {
 
             try {
                 if(temperatures != null) {
-                    if(temperatures.size() > 0) {
-
-                        Log.d(TAG, "GENERATING TEMPERATURE MEASUREMENT");
-
-                        String tag = "";
-                        if(temperatureTagEdTxt.getText().toString().trim().length() > 0)
-                            tag = temperatureTagEdTxt.getText().toString().trim();
-                        else
-                            tag = getResources().getString(R.string.temperature_tag);
-
-                        // generating a measurement from the retrieved list of temperatures
-                        for (int i = 0; i < temperatures.size(); i++) {
-                            DataModel dm = new DataModel();
-                            Log.d(TAG, "Temperature value: " + temperatures.get(i).getTemperatureValue());
-                            dm.setTag(tag);
-                            dm.setValue(temperatures.get(i).getTemperatureValue());
-                            dataModelList.add(dm);
-                        }
-                    }
-
+                    temperatureList = temperatures;
                     saMiViewModel.generateGasMeasurementAsync();
                 }
             } catch (Exception ex) {
@@ -117,31 +103,8 @@ public class PostRequestActivity extends AppCompatActivity {
 
             try {
                 if(gases != null) {
-                    if(gases.size() > 0) {
-                        Log.d(TAG, "GENERATING GAS MEASUREMENT");
-
-                        String tag = "";
-                        if(gasTagEdTxt.getText().toString().trim().length() > 0)
-                            tag = gasTagEdTxt.getText().toString().trim();
-                        else
-                            tag = getResources().getString(R.string.gas_tag);
-
-                        // adding the retrieved list of gases to the measurement
-                        for (int i = 0; i < gases.size(); i++) {
-                            DataModel dm = new DataModel();
-                            Log.d(TAG, "Gas value: " + gases.get(i).getGasValue());
-                            dm.setTag(tag);
-                            dm.setValue(gases.get(i).getGasValue());
-                            dataModelList.add(dm);
-                        }
-                    }
-
-                    initialMeasurement.setData(dataModelList);
-
-                    Log.d(TAG, "SENDING GENERATED TEMPERATURE AND/OR GAS MEASUREMENT VIA POST REQUEST");
-                    // sending generated measurement to the SaMi cloud via POST request
-                    saMiViewModel.makePostRequest("savoniatest", initialMeasurement);
-
+                    gasList = gases;
+                    buildRequest();
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -182,5 +145,104 @@ public class PostRequestActivity extends AppCompatActivity {
 
     }
 
+    public void buildRequest() {
+        // TEMPERATURES
+        if(temperatureList.size() > 0) {
+
+            Log.d(TAG, "GENERATING TEMPERATURE MEASUREMENT");
+
+            String tag = "";
+            if(temperatureTagEdTxt.getText().toString().trim().length() > 0)
+                tag = temperatureTagEdTxt.getText().toString().trim();
+            else
+                tag = getResources().getString(R.string.temperature_tag);
+
+
+            // generating a measurement from the retrieved list of temperatures
+            for (int i = 0; i < temperatureList.size(); i++) {
+                MeasurementsModel mM = new MeasurementsModel();
+                ArrayList<DataModel> dMList = new ArrayList<DataModel>();
+                DataModel dM = new DataModel();
+
+                // preparing MeasurementModel
+                mM.setTag(measurementTag);
+                mM.setObject(measurementName);
+                mM.setTimestampISO8601(simpleDateFormat.format(temperatureList.get(i).getDate()));
+
+                // preaparing DataModel
+                Log.d(TAG, "Temperature value: " + temperatureList.get(i).getTemperatureValue());
+                Log.d(TAG, "Temperature time: " + simpleDateFormat.format(temperatureList.get(i).getDate()));
+                dM.setTag(tag);
+                dM.setValue(temperatureList.get(i).getTemperatureValue());
+                // adding DataModel to the list of DataModels
+                dMList.add(dM);
+                // adding a list of DataModels to MeasurementModel
+                mM.setData(dMList);
+                // adding MeasurementModel to the list of MeasurementModels
+                initialMeasurements.add(mM);
+            }
+
+        }
+
+
+        // GASES
+        if(gasList.size() > 0) {
+            Log.d(TAG, "GENERATING GAS MEASUREMENT");
+
+            String tag = "";
+            if(gasTagEdTxt.getText().toString().trim().length() > 0)
+                tag = gasTagEdTxt.getText().toString().trim();
+            else
+                tag = getResources().getString(R.string.gas_tag);
+
+            // adding the retrieved list of gases to the measurement
+            if(initialMeasurements.size() > gasList.size()) {
+                for (int i = 0; i < gasList.size(); i++) {
+                    DataModel dM = new DataModel();
+
+                    Log.d(TAG, "Gas value: " + gasList.get(i).getGasValue());
+                    dM.setTag(tag);
+                    dM.setValue(gasList.get(i).getGasValue());
+                    initialMeasurements.get(i).getData().add(dM);
+                }
+            } else {
+                for (int i = 0; i < gasList.size(); i++) {
+                    DataModel dM = new DataModel();
+
+                    if(i < initialMeasurements.size()) {
+                        Log.d(TAG, "Gas value: " + gasList.get(i).getGasValue());
+                        dM.setTag(tag);
+                        dM.setValue(gasList.get(i).getGasValue());
+                        initialMeasurements.get(i).getData().add(dM);
+                    } else {
+                        MeasurementsModel mM = new MeasurementsModel();
+                        ArrayList<DataModel> dMList = new ArrayList<DataModel>();
+
+                        // preparing MeasurementModel
+                        mM.setTag(measurementTag);
+                        mM.setObject(measurementName);
+                        mM.setTimestampISO8601(simpleDateFormat.format(gasList.get(i).getDate()));
+
+                        // preparing DataModel
+                        Log.d(TAG, "Gas value: " + gasList.get(i).getGasValue());
+                        dM.setTag(tag);
+                        dM.setValue(gasList.get(i).getGasValue());
+
+                        // adding DataModel to the list of DataModels
+                        dMList.add(dM);
+
+                        // adding the list of DataModels to the MeasurementModel
+                        mM.setData(dMList);
+                        // addig MeasurementModel to the list of MeasurementModels
+                        initialMeasurements.add(mM);
+                    }
+                }
+            }
+        }
+
+        // sending generated measurement to the SaMi cloud via POST request
+        Log.d(TAG, "SENDING GENERATED TEMPERATURE AND/OR GAS MEASUREMENT VIA POST REQUEST");
+        saMiViewModel.makePostRequest("savoniatest", initialMeasurements);
+    }
 
 }

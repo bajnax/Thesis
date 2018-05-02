@@ -14,11 +14,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.DataPointInterface;
+import com.jjoe64.graphview.series.OnDataPointTapListener;
 import com.jjoe64.graphview.series.PointsGraphSeries;
+import com.jjoe64.graphview.series.Series;
 import com.savonia.thesis.db.entity.Temperature;
 import com.savonia.thesis.viewmodels.SensorsDataViewModel;
 import com.savonia.thesis.viewmodels.SharedViewModel;
@@ -107,8 +111,9 @@ public class TemperatureFragment extends Fragment {
         // enabling horizontal zooming and scrolling
         temperatureGraph.getViewport().setScrollable(true);
 
-        temperatureGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
+        /*temperatureGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
         temperatureGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
+        temperatureGraph.getGridLabelRenderer().setLabelsSpace(20);*/
 
         temperatureGraph.getViewport().setYAxisBoundsManual(true);
         temperatureGraph.getViewport().setMinY(0);
@@ -117,7 +122,7 @@ public class TemperatureFragment extends Fragment {
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         temperatureGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
-        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 2 because of the space
+        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // only 2 because of the space
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
@@ -133,6 +138,14 @@ public class TemperatureFragment extends Fragment {
         temperatureGraph.getGridLabelRenderer().setHumanRounding(false);
 
         temperatureSeries = new PointsGraphSeries<>();
+        temperatureSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
+            @Override
+            public void onTap(Series series, DataPointInterface dataPoint) {
+                Toast.makeText(getActivity(), "Measurement time: "+ mDateFormatter.format(dataPoint.getX()) +
+                        "\nTemperature value (C): " + dataPoint.getY(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
         temperatureGraph.addSeries(temperatureSeries);
 
         final SensorsDataViewModel sensorsDataViewModel =
@@ -191,7 +204,6 @@ public class TemperatureFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        //this.updateGraphOnPostResume = true;
     }
 
 

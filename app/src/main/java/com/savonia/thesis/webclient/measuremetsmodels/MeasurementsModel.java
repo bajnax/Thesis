@@ -5,12 +5,13 @@ import com.google.gson.annotations.SerializedName;
 
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MeasurementsModel {
     @SerializedName("Data")
     @Expose
-    private List<DataModel> data = null;
+    private ArrayList<DataModel> data;
     @SerializedName("Location")
     @Expose
     private Object location;
@@ -28,13 +29,19 @@ public class MeasurementsModel {
     private String timestampISO8601;
     // 2018-04-27T12:36:22+03:00
 
+    /*@SerializedName("Timestamp")
+    @Expose
+    private String timestamp;*/
+
+
+
     public MeasurementsModel() {}
 
-    public List<DataModel> getData() {
+    public ArrayList<DataModel> getData() {
         return data;
     }
 
-    public void setData(List<DataModel> data) {
+    public void setData(ArrayList<DataModel> data) {
         this.data = data;
     }
 
@@ -77,5 +84,13 @@ public class MeasurementsModel {
     public void setTimestampISO8601(String timestampISO8601) {
         this.timestampISO8601 = timestampISO8601;
     }
+
+    /*public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }*/
 
 }

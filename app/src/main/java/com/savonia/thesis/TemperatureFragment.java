@@ -32,13 +32,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * Use the {@link TemperatureFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class TemperatureFragment extends Fragment {
     // the fragment initialization parameters
     private static final String ARG_PARAM1 = "param1";
@@ -51,6 +44,7 @@ public class TemperatureFragment extends Fragment {
     private boolean isScrollToEndChecked = false;
     private PointsGraphSeries<DataPoint> temperatureSeries;
     private SimpleDateFormat mDateFormatter;
+    private SimpleDateFormat simpleDateFormat;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable mTimer1;
     private Runnable mTimer2;
@@ -60,7 +54,6 @@ public class TemperatureFragment extends Fragment {
     public TemperatureFragment() {
         // Required empty public constructor
     }
-
 
     public static TemperatureFragment newInstance(String param1) {
 
@@ -101,28 +94,29 @@ public class TemperatureFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_temperature, container, false);
 
         temperatureGraph = (GraphView) rootView.findViewById(R.id.temperatureGraph);
-        mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.US);
+        mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH);
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 
         temperatureGraph.setTitle("Current sensor\'s data");
         temperatureGraph.setTitleColor(R.color.colorPrimaryDark);
         temperatureGraph.getGridLabelRenderer().setVerticalAxisTitle("Temperature (C)");
         temperatureGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
-        // enabling horizontal zooming and scrolling
+        // enabling zooming and scrolling
         temperatureGraph.getViewport().setScrollable(true);
 
-        /*temperatureGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
-        temperatureGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
-        temperatureGraph.getGridLabelRenderer().setLabelsSpace(20);*/
+        temperatureGraph.getGridLabelRenderer().setLabelsSpace(20);
+        temperatureGraph.getGridLabelRenderer().setPadding(25);
 
         temperatureGraph.getViewport().setYAxisBoundsManual(true);
-        temperatureGraph.getViewport().setMinY(0);
-        temperatureGraph.getViewport().setMaxY(40);
+        temperatureGraph.getViewport().setMinY(-15);
+        temperatureGraph.getViewport().setMaxY(50);
 
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         temperatureGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
-        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // only 2 because of the space
+        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
+        temperatureGraph.getGridLabelRenderer().setHorizontalLabelsAngle(45);
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
@@ -141,7 +135,7 @@ public class TemperatureFragment extends Fragment {
         temperatureSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
             @Override
             public void onTap(Series series, DataPointInterface dataPoint) {
-                Toast.makeText(getActivity(), "Measurement time: "+ mDateFormatter.format(dataPoint.getX()) +
+                Toast.makeText(getActivity(), "Measurement time: "+ simpleDateFormat.format(dataPoint.getX()) +
                         "\nTemperature value (C): " + dataPoint.getY(), Toast.LENGTH_SHORT).show();
             }
         });

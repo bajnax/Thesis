@@ -73,12 +73,6 @@ public class PostRequestActivity extends AppCompatActivity {
                 else
                     measurementTag = getResources().getString(R.string.measurement_tag);
 
-                /*Date date = GregorianCalendar.getInstance().getTime();
-                String currentDateAndTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH)
-                        .format(date);
-                Log.d(TAG, "Current date and time: " + currentDateAndTime);*/
-                //initialMeasurement.setTimestampISO8601(currentDateAndTime);
-                //initialMeasurement.setTimestampISO8601("2018-04-28T17:48:19+03:00");
 
                 saMiViewModel.generateTemperatureMeasurementAsync();
             }
@@ -118,6 +112,9 @@ public class PostRequestActivity extends AppCompatActivity {
                 if(response == 1) {
                     Toast.makeText(PostRequestActivity.this, "The data has been successfully saved in the SaMi cloud!",
                             Toast.LENGTH_LONG).show();
+                    // closing activity
+                    PostRequestActivity.this.finish();
+                    // TODO: clear the database here
                 } else {
                     Toast.makeText(PostRequestActivity.this, "Error occurred while sending the data. " +
                                     "Check your internet connection or contact Mikko Paakkonen!",

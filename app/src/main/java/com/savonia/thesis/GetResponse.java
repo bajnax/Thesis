@@ -54,7 +54,6 @@ public class GetResponse extends Fragment {
         // Required empty public constructor
     }
 
-
     public static GetResponse newInstance(String param1) {
         GetResponse fragment = new GetResponse();
         Bundle args = new Bundle();
@@ -97,7 +96,6 @@ public class GetResponse extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_get_response, container, false);
 
         measurementsGraph = (GraphView)rootView.findViewById(R.id.measurementsGraph);
-        //mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
         measurementsGraph.setTitle("Get response data");
         measurementsGraph.setTitleColor(R.color.colorPrimaryDark);
@@ -106,10 +104,15 @@ public class GetResponse extends Fragment {
 
         // enabling horizontal zooming and scrolling
         measurementsGraph.getViewport().setScalable(true);
+        /*// enabling vertical zooming and scrolling
+        measurementsGraph.getViewport().setScalableY(true);*/
+
 
         measurementsGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
         measurementsGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
-        measurementsGraph.getGridLabelRenderer().setLabelsSpace(20);
+        measurementsGraph.getGridLabelRenderer().setLabelsSpace(25);
+        measurementsGraph.getGridLabelRenderer().setPadding(30);
+        measurementsGraph.getGridLabelRenderer().setHighlightZeroLines(true);
         measurementsGraph.getViewport().setYAxisBoundsManual(true);
 
         gasSeries = new PointsGraphSeries<>();

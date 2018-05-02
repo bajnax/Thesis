@@ -44,6 +44,7 @@ public class GasFragment extends Fragment {
     private boolean isScrollToEndChecked = false;
     private PointsGraphSeries<DataPoint> gasSeries;
     private SimpleDateFormat mDateFormatter;
+    private SimpleDateFormat simpleDateFormat;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable mTimer1;
     private Runnable mTimer2;
@@ -89,19 +90,19 @@ public class GasFragment extends Fragment {
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_gas, container, false);
         gasGraph = (GraphView) rootView.findViewById(R.id.gasGraph);
-        mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.US);
+        mDateFormatter = new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH);
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 
         gasGraph.setTitle("Current sensor\'s data");
         gasGraph.setTitleColor(R.color.colorPrimaryDark);
         gasGraph.getGridLabelRenderer().setVerticalAxisTitle("CO2 (ppm)");
         gasGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
-        // enabling horizontal zooming and scrolling
+        // enabling zooming and scrolling
         gasGraph.getViewport().setScrollable(true);
 
-        /*gasGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
-        gasGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
-        gasGraph.getGridLabelRenderer().setLabelsSpace(20);*/
+        gasGraph.getGridLabelRenderer().setLabelsSpace(20);
+        gasGraph.getGridLabelRenderer().setPadding(25);
 
         gasGraph.getViewport().setYAxisBoundsManual(true);
         gasGraph.getViewport().setMinY(0);
@@ -110,7 +111,9 @@ public class GasFragment extends Fragment {
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         gasGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
-        gasGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // only 4 because of the space
+        gasGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
+        gasGraph.getGridLabelRenderer().setHorizontalLabelsAngle(45);
+        gasGraph.getGridLabelRenderer().setHighlightZeroLines(true);
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
@@ -129,7 +132,7 @@ public class GasFragment extends Fragment {
         gasSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
             @Override
             public void onTap(Series series, DataPointInterface dataPoint) {
-                Toast.makeText(getActivity(), "Measurement time: "+ mDateFormatter.format(dataPoint.getX()) +
+                Toast.makeText(getActivity(), "Measurement time: "+ simpleDateFormat.format(dataPoint.getX()) +
                         "\nGas value (ppm): " + dataPoint.getY(), Toast.LENGTH_SHORT).show();
             }
         });

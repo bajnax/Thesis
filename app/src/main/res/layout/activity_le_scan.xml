@@ -39,7 +39,8 @@
         android:elevation="0dp"
         android:text="@string/look_up_btn_txt"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_default="wrap"
+        app:layout_constrainedHeight="true"
+        app:layout_constrainedWidth="true"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/lookUpTextView"
         app:layout_constraintWidth_default="wrap" />

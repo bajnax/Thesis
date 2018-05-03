@@ -3,6 +3,7 @@ package com.savonia.thesis;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -231,6 +233,21 @@ public class GetResponse extends Fragment {
         super.onDetach();
         mHandler.removeCallbacks(mTimer1);
         mHandler.removeCallbacks(mTimer2);
+    }
+
+    // closing keyboard when switching between tabs
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            try {
+                InputMethodManager mImm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                mImm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+                mImm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+            } catch (Exception e) {
+                Log.e(TAG, "setUserVisibleHint: ", e);
+            }
+        }
     }
 
 }

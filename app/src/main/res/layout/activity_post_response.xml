@@ -6,63 +6,92 @@
     android:layout_height="match_parent"
     tools:context=".PostRequestActivity">
 
-    <EditText
-        android:id="@+id/measurementName"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="@string/measurement_name"
-        app:layout_constraintHeight_default="wrap"
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/input_layout_measurementName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constrainedHeight="true"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintVertical_chainStyle="packed"/>
+        app:layout_constraintVertical_chainStyle="packed">
 
-    <EditText
-        android:id="@+id/measurementTag"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="@string/measurement_tag"
-        app:layout_constraintHeight_default="wrap"
+        <EditText
+            android:id="@+id/measurementName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="@string/measurement_name" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/input_layout_measurementTag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constrainedHeight="true"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/measurementName" />
+        app:layout_constraintTop_toBottomOf="@+id/input_layout_measurementName">
 
-    <EditText
-        android:id="@+id/temperatureTag"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="@string/temperature_tag"
-        app:layout_constraintHeight_default="wrap"
+        <EditText
+            android:id="@+id/measurementTag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="@string/measurement_tag" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/input_layout_temperature_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constrainedHeight="true"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/measurementTag" />
+        app:layout_constraintTop_toBottomOf="@+id/input_layout_measurementTag">
 
-    <EditText
-        android:id="@+id/gasTag"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="@string/gas_tag"
-        app:layout_constraintHeight_default="wrap"
+        <EditText
+            android:id="@+id/temperatureTag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="@string/temperature_tag" />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/input_layout_gas_tag"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constrainedHeight="true"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/temperatureTag" />
+        app:layout_constraintTop_toBottomOf="@+id/input_layout_temperature_tag">
+
+        <EditText
+            android:id="@+id/gasTag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="@string/gas_tag" />
+
+    </android.support.design.widget.TextInputLayout>
 
     <Button
         android:id="@+id/postButton"
@@ -74,7 +103,7 @@
         android:text="@string/post_button_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gasTag"
+        app:layout_constraintTop_toBottomOf="@+id/input_layout_gas_tag"
         app:layout_constraintVertical_bias="0.0" />
 
 </android.support.constraint.ConstraintLayout>

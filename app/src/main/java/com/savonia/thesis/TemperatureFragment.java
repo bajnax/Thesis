@@ -152,14 +152,6 @@ public class TemperatureFragment extends Fragment {
 
                 } else if(temperatures.size() > 0) {
 
-                    //updates the graph on resume, but quite slowly
-                    /* if(temperatures.size() > 1 && updateGraphOnPostResume) {
-                        updateGraphOnPostResume = false;
-                        Log.i(TAG, "RESUME GRAPH RESET");
-                        temperatureGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
-                        temperatureGraph.getViewport().setMaxX((double)temperatureGraph.getViewport().getMinX(false) + 15000);
-                        displayTemperatures(temperatures);*/
-
                     // if temperatures are present in the database, but the graph is empty, then
                     // most probably activity had been recreated and the graph should be populated with the data again
                     if(temperatureSeries.isEmpty() && temperatures.size() > 1) {

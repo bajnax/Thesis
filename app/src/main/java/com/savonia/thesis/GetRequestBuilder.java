@@ -1,18 +1,26 @@
 package com.savonia.thesis;
 
 
+import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 
 import com.savonia.thesis.viewmodels.GetRequestViewModel;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
+
+import org.w3c.dom.Text;
 
 
 public class GetRequestBuilder extends Fragment {
@@ -21,14 +29,18 @@ public class GetRequestBuilder extends Fragment {
     private static final String TAG = GetRequestBuilder.class.getSimpleName();
     private String mParam1;
     private Button getButton;
+    private TextInputLayout inputLayoutKey;
+    private EditText keyEdTxt;
     private EditText measurementNameEdTxt;
     private EditText measurementTagEdTxt;
+    private TextInputLayout inputLayoutTemperatureTag;
     private EditText temperatureTagEdTxt;
+    private TextInputLayout inputLayoutGasTag;
     private EditText gasTagEdTxt;
     private EditText fromDate;
     private EditText toDate;
     private EditText takeAmountEdTxt;
-    private EditText keyEdTxt;
+
 
     private GetRequestViewModel getRequestViewModel;
 
@@ -68,14 +80,22 @@ public class GetRequestBuilder extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_get_request_builder, container, false);
         getButton = (Button) rootView.findViewById(R.id.getButton);
 
+        inputLayoutKey =(TextInputLayout) rootView.findViewById(R.id.input_layout_key);
+        keyEdTxt = (EditText) rootView.findViewById(R.id.key);
         measurementNameEdTxt = (EditText) rootView.findViewById(R.id.measurementName);
         measurementTagEdTxt = (EditText) rootView.findViewById(R.id.measurementTag);
-        temperatureTagEdTxt = (EditText) rootView.findViewById(R.id.temperatureTag);
         fromDate = (EditText) rootView.findViewById(R.id.fromDate);
         toDate = (EditText) rootView.findViewById(R.id.toDate);
         takeAmountEdTxt = (EditText) rootView.findViewById(R.id.takeAmount);
-        keyEdTxt = (EditText) rootView.findViewById(R.id.key);
+        inputLayoutTemperatureTag =(TextInputLayout) rootView.findViewById(R.id.input_layout_temperature_tag);
+        temperatureTagEdTxt = (EditText) rootView.findViewById(R.id.temperatureTag);
+        inputLayoutGasTag =(TextInputLayout) rootView.findViewById(R.id.input_layout_gas_tag);
         gasTagEdTxt = (EditText) rootView.findViewById(R.id.gasTag);
+
+        keyEdTxt.addTextChangedListener(new MyTextWatcher(keyEdTxt));
+        temperatureTagEdTxt.addTextChangedListener(new MyTextWatcher(temperatureTagEdTxt));
+        gasTagEdTxt.addTextChangedListener(new MyTextWatcher(gasTagEdTxt));
+
         final SaMiViewModel saMiViewModel = ViewModelProviders.of(getActivity()).get(SaMiViewModel.class);
 
         getButton.setOnClickListener(new View.OnClickListener() {
@@ -99,6 +119,7 @@ public class GetRequestBuilder extends Fragment {
                     else {
                         key = getResources().getString(R.string.key_password);
                     }
+
                     getRequestViewModel.setKey(key);
 
                     if (measurementNameEdTxt.getText().toString().trim().length() > 0) {
@@ -113,9 +134,7 @@ public class GetRequestBuilder extends Fragment {
 
                     if(fromDate.getText().toString().trim().length() >= 10) {
                         fromDateString = fromDate.getText().toString().trim();
-                    } /*else {
-                        fromDateString = getResources().getString(R.string.from_date);
-                    }*/
+                    }
 
                     if(toDate.getText().toString().trim().length() >= 10) {
                         toDateString = toDate.getText().toString().trim();
@@ -146,11 +165,15 @@ public class GetRequestBuilder extends Fragment {
                     Log.d(TAG, "String Builder: " + sb.toString());
                     dataTags = sb.toString();
 
-                    // TODO: create proper get request from the edit texts (temperature and gas tags and a key must be always present!)
-                    saMiViewModel.makeGetRequest(key.isEmpty() ? null : key, measurementName.isEmpty() ? null : measurementName,
-                            measurementTag.isEmpty() ? null : measurementTag, fromDateString.isEmpty() ? null : fromDateString,
-                            toDateString.isEmpty() ? null : toDateString, takeAmount == 0 ? null : takeAmount,
-                            dataTags.isEmpty() ? null : dataTags);
+                    if(submitForm()) {
+
+                        hideSoftKeyboard(getActivity());
+
+                        saMiViewModel.makeGetRequest(key.isEmpty() ? null : key, measurementName.isEmpty() ? null : measurementName,
+                                measurementTag.isEmpty() ? null : measurementTag, fromDateString.isEmpty() ? null : fromDateString,
+                                toDateString.isEmpty() ? null : toDateString, takeAmount == 0 ? null : takeAmount,
+                                dataTags.isEmpty() ? null : dataTags);
+                    }
 
                 } catch(Exception ex) {
                     ex.printStackTrace();
@@ -158,6 +181,101 @@ public class GetRequestBuilder extends Fragment {
             }
         });
         return rootView;
+    }
+
+    private void requestFocus(View view) {
+        if (view.requestFocus()) {
+            getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
+    }
+
+    private Boolean submitForm() {
+        if (!validateKey()) {
+            return false;
+        }
+
+        if (!validateTemperatureTag()) {
+            return false;
+        }
+
+        if (!validateGasTag()) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateKey() {
+        if (keyEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutKey.setError(getResources().getString(R.string.key_error));
+            requestFocus(keyEdTxt);
+            return false;
+        } else {
+            inputLayoutKey.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validateTemperatureTag() {
+        if (temperatureTagEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutTemperatureTag.setError(getResources().getString(R.string.temperature_tag_error));
+            requestFocus(temperatureTagEdTxt);
+            return false;
+        } else {
+            inputLayoutTemperatureTag.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validateGasTag() {
+        if (gasTagEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutGasTag.setError(getResources().getString(R.string.gas_tag_error));
+            requestFocus(gasTagEdTxt);
+            return false;
+        } else {
+            inputLayoutGasTag.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private class MyTextWatcher implements TextWatcher {
+
+        private View view;
+
+        private MyTextWatcher(View view) {
+            this.view = view;
+        }
+
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void afterTextChanged(Editable editable) {
+            switch (view.getId()) {
+                case R.id.key:
+                    validateKey();
+                    break;
+                case R.id.temperatureTag:
+                    validateTemperatureTag();
+                    break;
+                case R.id.gasTag:
+                    validateGasTag();
+                    break;
+            }
+        }
+    }
+
+    private void hideSoftKeyboard(Activity activity) {
+        try {
+            InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(), 0);
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        }
     }
 
 }

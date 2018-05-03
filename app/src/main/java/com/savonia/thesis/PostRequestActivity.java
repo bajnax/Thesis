@@ -1,10 +1,16 @@
 package com.savonia.thesis;
 
+import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -33,9 +39,13 @@ public class PostRequestActivity extends AppCompatActivity {
     private String measurementName = "";
     private MeasurementsModel responseMeasurement;
     private ArrayList<MeasurementsModel> initialMeasurements;
+    private TextInputLayout inputLayoutMeasurementName;
     private EditText measurementNameEdTxt;
+    private TextInputLayout inputLayoutMeasurementTag;
     private EditText measurementTagEdTxt;
+    private TextInputLayout inputLayoutTemperatureTag;
     private EditText temperatureTagEdTxt;
+    private TextInputLayout inputLayoutGasTag;
     private EditText gasTagEdTxt;
     private SimpleDateFormat simpleDateFormat;
     private Button sendButton;
@@ -44,12 +54,20 @@ public class PostRequestActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_response);
-
+        inputLayoutMeasurementName = (TextInputLayout) findViewById(R.id.input_layout_measurementName);
         measurementNameEdTxt = (EditText) findViewById(R.id.measurementName);
+        inputLayoutMeasurementTag = (TextInputLayout) findViewById(R.id.input_layout_measurementTag);
         measurementTagEdTxt = (EditText) findViewById(R.id.measurementTag);
+        inputLayoutTemperatureTag = (TextInputLayout) findViewById(R.id.input_layout_temperature_tag);
         temperatureTagEdTxt = (EditText) findViewById(R.id.temperatureTag);
+        inputLayoutGasTag = (TextInputLayout) findViewById(R.id.input_layout_gas_tag);
         gasTagEdTxt = (EditText) findViewById(R.id.gasTag);
         sendButton = (Button) findViewById(R.id.postButton);
+
+        measurementNameEdTxt.addTextChangedListener(new MyTextWatcher(measurementNameEdTxt));
+        measurementTagEdTxt.addTextChangedListener(new MyTextWatcher(measurementTagEdTxt));
+        temperatureTagEdTxt.addTextChangedListener(new MyTextWatcher(temperatureTagEdTxt));
+        gasTagEdTxt.addTextChangedListener(new MyTextWatcher(gasTagEdTxt));
 
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH);
 
@@ -60,21 +78,26 @@ public class PostRequestActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                initialMeasurements = null;
-                initialMeasurements = new ArrayList<MeasurementsModel>();
+                if(submitForm()) {
 
-                if(measurementNameEdTxt.getText().toString().trim().length() > 0)
-                    measurementName = measurementNameEdTxt.getText().toString().trim();
-                else
-                    measurementName = getResources().getString(R.string.measurement_name);
+                    hideSoftKeyboard();
 
-                if(measurementTagEdTxt.getText().toString().trim().length() > 0)
-                    measurementTag = measurementTagEdTxt.getText().toString().trim();
-                else
-                    measurementTag = getResources().getString(R.string.measurement_tag);
+                    initialMeasurements = null;
+                    initialMeasurements = new ArrayList<MeasurementsModel>();
+
+                    if (measurementNameEdTxt.getText().toString().trim().length() > 0)
+                        measurementName = measurementNameEdTxt.getText().toString().trim();
+                    else
+                        measurementName = getResources().getString(R.string.measurement_name);
+
+                    if (measurementTagEdTxt.getText().toString().trim().length() > 0)
+                        measurementTag = measurementTagEdTxt.getText().toString().trim();
+                    else
+                        measurementTag = getResources().getString(R.string.measurement_tag);
 
 
-                saMiViewModel.generateTemperatureMeasurementAsync();
+                    saMiViewModel.generateTemperatureMeasurementAsync();
+                }
             }
         });
 
@@ -240,6 +263,122 @@ public class PostRequestActivity extends AppCompatActivity {
         // sending generated measurement to the SaMi cloud via POST request
         Log.d(TAG, "SENDING GENERATED TEMPERATURE AND/OR GAS MEASUREMENT VIA POST REQUEST");
         saMiViewModel.makePostRequest("savoniatest", initialMeasurements);
+    }
+
+
+    private void requestFocus(View view) {
+        if (view.requestFocus()) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
+    }
+
+    private Boolean submitForm() {
+        if (!validateMeasurementName()) {
+            return false;
+        }
+
+        if (!validateMeasurementTag()) {
+            return false;
+        }
+
+        if (!validateTemperatureTag()) {
+            return false;
+        }
+
+        if (!validateGasTag()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateMeasurementName() {
+        if (measurementNameEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutMeasurementName.setError(getResources().getString(R.string.measurement_name_error));
+            requestFocus(measurementNameEdTxt);
+            return false;
+        } else {
+            inputLayoutMeasurementName.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validateMeasurementTag() {
+        if (measurementTagEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutMeasurementTag.setError(getResources().getString(R.string.measurement_tag_error));
+            requestFocus(measurementTagEdTxt);
+            return false;
+        } else {
+            inputLayoutMeasurementTag.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validateTemperatureTag() {
+        if (temperatureTagEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutTemperatureTag.setError(getResources().getString(R.string.temperature_tag_error));
+            requestFocus(temperatureTagEdTxt);
+            return false;
+        } else {
+            inputLayoutTemperatureTag.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validateGasTag() {
+        if (gasTagEdTxt.getText().toString().trim().isEmpty()) {
+            inputLayoutGasTag.setError(getResources().getString(R.string.gas_tag_error));
+            requestFocus(gasTagEdTxt);
+            return false;
+        } else {
+            inputLayoutGasTag.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private class MyTextWatcher implements TextWatcher {
+
+        private View view;
+
+        private MyTextWatcher(View view) {
+            this.view = view;
+        }
+
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        }
+
+        public void afterTextChanged(Editable editable) {
+            switch (view.getId()) {
+                case R.id.measurementName:
+                    validateMeasurementName();
+                    break;
+                case R.id.measurementTag:
+                    validateMeasurementTag();
+                    break;
+                case R.id.temperatureTag:
+                    validateTemperatureTag();
+                    break;
+                case R.id.gasTag:
+                    validateGasTag();
+                    break;
+            }
+        }
+    }
+
+    private void hideSoftKeyboard() {
+        try {
+            InputMethodManager inputMethodManager = (InputMethodManager) PostRequestActivity.this.getSystemService(Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(PostRequestActivity.this.getCurrentFocus().getWindowToken(), 0);
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        }
     }
 
 }

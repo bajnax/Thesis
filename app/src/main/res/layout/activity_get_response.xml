@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     tools:context=".GetRequestActivity">
 
     <include
@@ -12,12 +13,11 @@
 
     <android.support.design.widget.TabLayout
         android:id="@+id/sliding_tabs"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/tool_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constrainedHeight="true"
         app:tabMode="fixed"
         app:tabGravity="fill"
         app:tabIndicatorColor ="@color/colorMain"/>

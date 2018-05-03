@@ -4,6 +4,7 @@ package com.savonia.thesis;
 import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -16,6 +17,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.savonia.thesis.viewmodels.GetRequestViewModel;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
@@ -30,16 +32,16 @@ public class GetRequestBuilder extends Fragment {
     private String mParam1;
     private Button getButton;
     private TextInputLayout inputLayoutKey;
-    private EditText keyEdTxt;
-    private EditText measurementNameEdTxt;
-    private EditText measurementTagEdTxt;
+    private TextInputEditText keyEdTxt;
+    private TextInputEditText measurementNameEdTxt;
+    private TextInputEditText measurementTagEdTxt;
     private TextInputLayout inputLayoutTemperatureTag;
-    private EditText temperatureTagEdTxt;
+    private TextInputEditText temperatureTagEdTxt;
     private TextInputLayout inputLayoutGasTag;
-    private EditText gasTagEdTxt;
-    private EditText fromDate;
-    private EditText toDate;
-    private EditText takeAmountEdTxt;
+    private TextInputEditText gasTagEdTxt;
+    private TextInputEditText fromDate;
+    private TextInputEditText toDate;
+    private TextInputEditText takeAmountEdTxt;
 
 
     private GetRequestViewModel getRequestViewModel;
@@ -81,16 +83,16 @@ public class GetRequestBuilder extends Fragment {
         getButton = (Button) rootView.findViewById(R.id.getButton);
 
         inputLayoutKey =(TextInputLayout) rootView.findViewById(R.id.input_layout_key);
-        keyEdTxt = (EditText) rootView.findViewById(R.id.key);
-        measurementNameEdTxt = (EditText) rootView.findViewById(R.id.measurementName);
-        measurementTagEdTxt = (EditText) rootView.findViewById(R.id.measurementTag);
-        fromDate = (EditText) rootView.findViewById(R.id.fromDate);
-        toDate = (EditText) rootView.findViewById(R.id.toDate);
-        takeAmountEdTxt = (EditText) rootView.findViewById(R.id.takeAmount);
+        keyEdTxt = (TextInputEditText) rootView.findViewById(R.id.key);
+        measurementNameEdTxt = (TextInputEditText) rootView.findViewById(R.id.measurementName);
+        measurementTagEdTxt = (TextInputEditText) rootView.findViewById(R.id.measurementTag);
+        fromDate = (TextInputEditText) rootView.findViewById(R.id.fromDate);
+        toDate = (TextInputEditText) rootView.findViewById(R.id.toDate);
+        takeAmountEdTxt = (TextInputEditText) rootView.findViewById(R.id.takeAmount);
         inputLayoutTemperatureTag =(TextInputLayout) rootView.findViewById(R.id.input_layout_temperature_tag);
-        temperatureTagEdTxt = (EditText) rootView.findViewById(R.id.temperatureTag);
+        temperatureTagEdTxt = (TextInputEditText) rootView.findViewById(R.id.temperatureTag);
         inputLayoutGasTag =(TextInputLayout) rootView.findViewById(R.id.input_layout_gas_tag);
-        gasTagEdTxt = (EditText) rootView.findViewById(R.id.gasTag);
+        gasTagEdTxt = (TextInputEditText) rootView.findViewById(R.id.gasTag);
 
         keyEdTxt.addTextChangedListener(new MyTextWatcher(keyEdTxt));
         temperatureTagEdTxt.addTextChangedListener(new MyTextWatcher(temperatureTagEdTxt));
@@ -166,6 +168,9 @@ public class GetRequestBuilder extends Fragment {
                     dataTags = sb.toString();
 
                     if(submitForm()) {
+
+                        Toast.makeText(getActivity(), "Retrieving data",
+                                Toast.LENGTH_SHORT).show();
 
                         hideSoftKeyboard(getActivity());
 

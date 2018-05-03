@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -23,6 +24,8 @@ public class GetRequestActivity extends AppCompatActivity {
 
     private static final String TAG = GetRequestActivity.class.getSimpleName();
     private Toolbar toolBar;
+
+    private SaMiViewModel saMiViewModel;
 
     // used for tabs and viewPager
     private NonSwipeableViewPager viewPager;
@@ -41,6 +44,8 @@ public class GetRequestActivity extends AppCompatActivity {
 
         toolBar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolBar);
+
+        saMiViewModel = ViewModelProviders.of(GetRequestActivity.this).get(SaMiViewModel.class);
 
         // Setting up the tabs and viewPager
         viewPager = (NonSwipeableViewPager) findViewById(R.id.viewpager);
@@ -63,6 +68,24 @@ public class GetRequestActivity extends AppCompatActivity {
         } catch(NullPointerException ex) {
             ex.printStackTrace();
         }
+
+        // result of the POST request
+        saMiViewModel.getResponseStatus().observe(GetRequestActivity.this, response -> {
+            if(response != 0) {
+                if(response == 1) {
+                    Toast.makeText(GetRequestActivity.this, "The data has been successfully retrieved from the SaMi cloud!",
+                            Toast.LENGTH_LONG).show();
+                    // select the tab with the getResponse fragment
+                    viewPager.setCurrentItem(1);
+                } else {
+                    Toast.makeText(GetRequestActivity.this, "Error occurred while loading the data. " +
+                                    "Check your internet connection, search parameters or contact Mikko Paakkonen!",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+        });
+
     }
 
 }

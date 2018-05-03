@@ -36,7 +36,6 @@ public class CentralRepository {
     private MediatorLiveData<List<Temperature>> mObservableTemperatures;
     private MediatorLiveData<List<Gas>> mObservableGases;
     private MutableLiveData<List<MeasurementsModel>> mObservableGetMeasurements;
-    private MutableLiveData<List<MeasurementsModel>> mObservablePostResponse;
     private MutableLiveData<List<Temperature>> mObservableAsyncTemperaturesList;
     private MutableLiveData<List<Gas>> mObservableAsyncGasesList;
     private MutableLiveData<Integer> responseStatus;
@@ -48,7 +47,6 @@ public class CentralRepository {
         mObservableTemperatures = new MediatorLiveData<>();
         mObservableGases = new MediatorLiveData<>();
         mObservableGetMeasurements = new MutableLiveData<>();
-        mObservablePostResponse = new MutableLiveData<>();
         mObservableAsyncTemperaturesList = new MutableLiveData<>();
         mObservableAsyncGasesList = new MutableLiveData<>();
         responseStatus = new MutableLiveData<>();
@@ -262,8 +260,11 @@ public class CentralRepository {
                 try {
                     Log.d(TAG, "on GET response message: " + response.message());
 
-                    if (response.isSuccessful())
+                    if (response.isSuccessful()) {
                         mObservableGetMeasurements.setValue(response.body());
+                        responseStatus.setValue(1);
+                    }
+                    responseStatus.setValue(0);
 
                 } catch(Exception ex) {
                     ex.printStackTrace();
@@ -274,6 +275,9 @@ public class CentralRepository {
             public void onFailure(Call<List<MeasurementsModel>> call, Throwable throwable) {
                 Log.d(TAG, "on GET failure");
                 System.out.println(throwable.toString());
+                mObservableGetMeasurements.setValue(null);
+                responseStatus.setValue(2);
+                responseStatus.setValue(0);
             }
         });
     }
@@ -284,7 +288,6 @@ public class CentralRepository {
     }
 
     public void makePostRequest(String key, ArrayList<MeasurementsModel> measurements) {
-        mObservablePostResponse.setValue(null);
 
         MeasurementsPackage measurementsPackage = new MeasurementsPackage();
         measurementsPackage.setKey(key);
@@ -298,14 +301,11 @@ public class CentralRepository {
                     Log.d(TAG, "POST RESPONSE MESSAGE: " + response.body().string());
 
                     if (response.isSuccessful()) {
-                        // TODO: read server response as a text (mb postman)!?
-                        //mObservablePostResponse.setValue(response.body().getMeasurements());
+                        responseStatus.setValue(1);
                         Log.d(TAG, "Successful POST response body: " + new Gson().toJson(response.body()));
                     } else {
                         Log.d(TAG, "Unsuccessful POST response body: " + new Gson().toJson(response.body()));
                     }
-
-                    responseStatus.setValue(1);
                     mObservableAsyncTemperaturesList.setValue(null);
                     mObservableAsyncGasesList.setValue(null);
                     responseStatus.setValue(0);
@@ -324,42 +324,6 @@ public class CentralRepository {
                 responseStatus.setValue(0);
             }
         });
-
-
-        /*saMiClient.postMeasurements(measurementsPackage).enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-
-                Log.d(TAG, "POST RESPONSE MESSAGE: " + response.message());
-
-                if(response.isSuccessful()) {
-                    // TODO: read server response as a text (mb postman)!?
-                    //mObservablePostResponse.setValue(response.body().getMeasurements());
-                    Log.d(TAG, "Successful POST response body: " + response.body());
-                } else {
-                    Log.d(TAG, "Unsuccessful POST response body: " + response.body());
-                }
-
-                responseStatus.setValue(1);
-                mObservableAsyncTemperaturesList.setValue(null);
-                mObservableAsyncGasesList.setValue(null);
-                responseStatus.setValue(0);
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable throwable) {
-                System.out.println(throwable.toString());
-                Log.d(TAG, "FAILED TO POST");
-                responseStatus.setValue(2);
-                mObservableAsyncTemperaturesList.setValue(null);
-                mObservableAsyncGasesList.setValue(null);
-                responseStatus.setValue(0);
-            }
-        });*/
-    }
-
-    public LiveData<List<MeasurementsModel>> getPostResponse() {
-        return mObservablePostResponse;
     }
 
     public LiveData<Integer> getResponseStatus() {

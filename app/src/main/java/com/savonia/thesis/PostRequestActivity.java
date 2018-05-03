@@ -2,6 +2,7 @@ package com.savonia.thesis;
 
 import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
+import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -40,13 +41,13 @@ public class PostRequestActivity extends AppCompatActivity {
     private MeasurementsModel responseMeasurement;
     private ArrayList<MeasurementsModel> initialMeasurements;
     private TextInputLayout inputLayoutMeasurementName;
-    private EditText measurementNameEdTxt;
+    private TextInputEditText measurementNameEdTxt;
     private TextInputLayout inputLayoutMeasurementTag;
-    private EditText measurementTagEdTxt;
+    private TextInputEditText measurementTagEdTxt;
     private TextInputLayout inputLayoutTemperatureTag;
-    private EditText temperatureTagEdTxt;
+    private TextInputEditText temperatureTagEdTxt;
     private TextInputLayout inputLayoutGasTag;
-    private EditText gasTagEdTxt;
+    private TextInputEditText gasTagEdTxt;
     private SimpleDateFormat simpleDateFormat;
     private Button sendButton;
 
@@ -55,13 +56,13 @@ public class PostRequestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_response);
         inputLayoutMeasurementName = (TextInputLayout) findViewById(R.id.input_layout_measurementName);
-        measurementNameEdTxt = (EditText) findViewById(R.id.measurementName);
+        measurementNameEdTxt = (TextInputEditText) findViewById(R.id.measurementName);
         inputLayoutMeasurementTag = (TextInputLayout) findViewById(R.id.input_layout_measurementTag);
-        measurementTagEdTxt = (EditText) findViewById(R.id.measurementTag);
+        measurementTagEdTxt = (TextInputEditText) findViewById(R.id.measurementTag);
         inputLayoutTemperatureTag = (TextInputLayout) findViewById(R.id.input_layout_temperature_tag);
-        temperatureTagEdTxt = (EditText) findViewById(R.id.temperatureTag);
+        temperatureTagEdTxt = (TextInputEditText) findViewById(R.id.temperatureTag);
         inputLayoutGasTag = (TextInputLayout) findViewById(R.id.input_layout_gas_tag);
-        gasTagEdTxt = (EditText) findViewById(R.id.gasTag);
+        gasTagEdTxt = (TextInputEditText) findViewById(R.id.gasTag);
         sendButton = (Button) findViewById(R.id.postButton);
 
         measurementNameEdTxt.addTextChangedListener(new MyTextWatcher(measurementNameEdTxt));
@@ -79,6 +80,9 @@ public class PostRequestActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 if(submitForm()) {
+
+                    Toast.makeText(PostRequestActivity.this, "Sending data",
+                            Toast.LENGTH_SHORT).show();
 
                     hideSoftKeyboard();
 
@@ -138,27 +142,12 @@ public class PostRequestActivity extends AppCompatActivity {
                     // closing activity
                     PostRequestActivity.this.finish();
                     // TODO: clear the database here
+                    saMiViewModel.clearDatabase();
+
                 } else {
                     Toast.makeText(PostRequestActivity.this, "Error occurred while sending the data. " +
-                                    "Check your internet connection or contact Mikko Paakkonen!",
+                                    "Check your internet connection, availability of data in the DB or contact Mikko Paakkonen!",
                             Toast.LENGTH_LONG).show();
-                }
-            }
-
-        });
-
-        saMiViewModel.getPostResponseMeasurement().observe(PostRequestActivity.this, postedMeasurement -> {
-            if(postedMeasurement != null) {
-                responseMeasurement = postedMeasurement.get(0);
-                try {
-
-                    for (int j = 0; j < responseMeasurement.getData().size(); j++) {
-                        Log.d(TAG, "RESPONSE FROM POST REQUEST RECEIVED (" + j + "): " +
-                                responseMeasurement.getData().get(j).getValue());
-                    }
-
-                } catch (Exception ex) {
-                    ex.printStackTrace();
                 }
             }
         });

@@ -17,7 +17,6 @@ public class SaMiViewModel extends AndroidViewModel {
 
     private LiveData<List<MeasurementsModel>> measurementsList;
     private CentralRepository mRepository;
-    private LiveData<List<MeasurementsModel>> measurement;
     private LiveData<List<Temperature>> temperatureListAsync;
     private LiveData<List<Gas>> gasListAsync;
     private LiveData<Integer> responseStatus;
@@ -28,7 +27,6 @@ public class SaMiViewModel extends AndroidViewModel {
         mRepository = CentralRepository.
                 getInstance(SensorsValuesDatabase.getDatabase(application));
         measurementsList = mRepository.getWebMeasurements();
-        measurement = mRepository.getPostResponse();
         temperatureListAsync = mRepository.getTemperatureMeasurementAsync();
         gasListAsync = mRepository.getGasMeasurementAsync();
         responseStatus = mRepository.getResponseStatus();
@@ -66,11 +64,11 @@ public class SaMiViewModel extends AndroidViewModel {
         mRepository.makePostRequest(key, postedMeasurement);
     }
 
-    public LiveData<List<MeasurementsModel>> getPostResponseMeasurement() {
-        return measurement;
-    }
-
     public LiveData<Integer> getResponseStatus() {
         return responseStatus;
+    }
+
+    public void clearDatabase() {
+        mRepository.clearDatabase();
     }
 }

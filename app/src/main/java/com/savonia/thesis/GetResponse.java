@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -166,6 +167,11 @@ public class GetResponse extends Fragment {
                         }
                     }
                     measurementsGraph.getViewport().setMaxX(measurementsModels.size());
+
+                    if(temperaturesList.isEmpty() && gasesList.isEmpty()) {
+                        Toast.makeText(getActivity(), "Received measurements that do not contain values!",
+                                Toast.LENGTH_LONG).show();
+                    }
 
                     displayTemperatures(temperaturesList);
                     displayGases(gasesList);

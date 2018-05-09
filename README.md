@@ -1,5 +1,5 @@
 # Thesis
-Android app, which reads sensors' (Grove temperature sensor v1.2 + MQ-135 gas sensor) data from the BLE shield by RedBearLab, which is mounted on Arduino Uno. The measurements can be exchanged with 'SaMi' cloud service of Savonia UAS. 
+Android app that reads sensors' (Grove temperature sensor v1.2 + MQ-135 gas sensor) data from the BLE shield by RedBearLab, which is mounted on Arduino Uno. The measurements can be exchanged with 'SaMi' cloud service of Savonia UAS. 
 
 
 Current implementation:

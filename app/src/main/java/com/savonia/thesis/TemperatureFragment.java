@@ -100,13 +100,13 @@ public class TemperatureFragment extends Fragment {
         temperatureGraph.setTitle("Current sensor\'s data");
         temperatureGraph.setTitleColor(R.color.colorPrimaryDark);
         temperatureGraph.getGridLabelRenderer().setVerticalAxisTitle("Temperature (C)");
-        temperatureGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
+        //temperatureGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
         // enabling zooming and scrolling
         temperatureGraph.getViewport().setScrollable(true);
 
         temperatureGraph.getGridLabelRenderer().setLabelsSpace(20);
-        temperatureGraph.getGridLabelRenderer().setPadding(25);
+        temperatureGraph.getGridLabelRenderer().setPadding(50);
 
         temperatureGraph.getViewport().setYAxisBoundsManual(true);
         temperatureGraph.getViewport().setMinY(-15);

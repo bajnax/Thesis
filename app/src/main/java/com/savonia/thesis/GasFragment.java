@@ -96,17 +96,17 @@ public class GasFragment extends Fragment {
         gasGraph.setTitle("Current sensor\'s data");
         gasGraph.setTitleColor(R.color.colorPrimaryDark);
         gasGraph.getGridLabelRenderer().setVerticalAxisTitle("CO2 (ppm)");
-        gasGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
+        //gasGraph.getGridLabelRenderer().setHorizontalAxisTitle("Time");
 
         // enabling zooming and scrolling
         gasGraph.getViewport().setScrollable(true);
 
         gasGraph.getGridLabelRenderer().setLabelsSpace(20);
-        gasGraph.getGridLabelRenderer().setPadding(25);
+        gasGraph.getGridLabelRenderer().setPadding(50);
 
         gasGraph.getViewport().setYAxisBoundsManual(true);
         gasGraph.getViewport().setMinY(0);
-        gasGraph.getViewport().setMaxY(400);
+        gasGraph.getViewport().setMaxY(2000);
 
         //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter

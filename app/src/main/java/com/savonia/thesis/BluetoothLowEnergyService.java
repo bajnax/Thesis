@@ -198,14 +198,16 @@ public class BluetoothLowEnergyService extends Service {
         String value;
         if (data != null && data.length > 0) {
             value = new String(data);
+            Log.d(TAG, "Received value: " + value);
             intent.putExtra(EXTRA_DATA, value);
 
             // retrieving the double value from the temperature notification
             if(value.charAt(0) == 't' && !value.contains("g")) {
                 try {
                     StringBuilder sb = new StringBuilder(value);
-                    value = sb.substring(2);
+                    value = sb.substring(1);
                     value = value.trim();
+                    Log.d(TAG, "Trimmed value: " + value);
 
                     double tempValue = Double.parseDouble(value);
 
@@ -218,8 +220,9 @@ public class BluetoothLowEnergyService extends Service {
                 // retrieving the double value from the gas notification
                 try {
                     StringBuilder sb = new StringBuilder(value);
-                    value = sb.substring(2);
+                    value = sb.substring(1);
                     value = value.trim();
+                    Log.d(TAG, "Trimmed value: " + value);
 
                     double gasValue = Double.parseDouble(value);
                     Gas gas = new Gas(gasValue);

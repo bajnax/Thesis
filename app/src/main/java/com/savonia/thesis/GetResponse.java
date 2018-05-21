@@ -19,7 +19,10 @@ import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.DataPointInterface;
+import com.jjoe64.graphview.series.OnDataPointTapListener;
 import com.jjoe64.graphview.series.PointsGraphSeries;
+import com.jjoe64.graphview.series.Series;
 import com.savonia.thesis.viewmodels.GetRequestViewModel;
 import com.savonia.thesis.viewmodels.SaMiViewModel;
 import com.savonia.thesis.webclient.measuremetsmodels.DataModel;
@@ -103,7 +106,7 @@ public class GetResponse extends Fragment {
         measurementsGraph.setTitle("Get response data");
         measurementsGraph.setTitleColor(R.color.colorPrimaryDark);
         measurementsGraph.getGridLabelRenderer().setVerticalAxisTitle("Value");
-        measurementsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Id");
+        //measurementsGraph.getGridLabelRenderer().setHorizontalAxisTitle("Id");
 
         // enabling horizontal zooming and scrolling
         measurementsGraph.getViewport().setScalable(true);
@@ -113,25 +116,42 @@ public class GetResponse extends Fragment {
 
         measurementsGraph.getGridLabelRenderer().setLabelVerticalWidth(70);
         measurementsGraph.getGridLabelRenderer().setLabelHorizontalHeight(50);
-        measurementsGraph.getGridLabelRenderer().setLabelsSpace(25);
-        measurementsGraph.getGridLabelRenderer().setPadding(30);
+        measurementsGraph.getGridLabelRenderer().setLabelsSpace(20);
+        measurementsGraph.getGridLabelRenderer().setPadding(65);
         measurementsGraph.getGridLabelRenderer().setHighlightZeroLines(true);
         measurementsGraph.getViewport().setYAxisBoundsManual(true);
 
         gasSeries = new PointsGraphSeries<>();
         temperatureSeries = new PointsGraphSeries<>();
 
-        // set temperatures at the second scale
-        measurementsGraph.getSecondScale().addSeries(temperatureSeries);
+        // shows toast regarding the point, on which the user clicked
+        gasSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
+            @Override
+            public void onTap(Series series, DataPointInterface dataPoint) {
+                Toast.makeText(getActivity(), "Gas value (ppm): " + dataPoint.getY(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // shows toast regarding the point, on which the user clicked
+        temperatureSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
+            @Override
+            public void onTap(Series series, DataPointInterface dataPoint) {
+                Toast.makeText(getActivity(), "Temperature value (C): " + dataPoint.getY(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
         // the y bounds are always manual for second scale
         measurementsGraph.getSecondScale().setMinY(-15);
         measurementsGraph.getSecondScale().setMaxY(50);
         gasSeries.setColor(Color.BLUE);
         measurementsGraph.getGridLabelRenderer().setVerticalLabelsSecondScaleColor(Color.BLUE);
 
+        // set temperatures at the second scale
+        measurementsGraph.getSecondScale().addSeries(temperatureSeries);
+
         // set gases at the first scale
         measurementsGraph.getViewport().setMinY(0);
-        measurementsGraph.getViewport().setMaxY(800);
+        measurementsGraph.getViewport().setMaxY(2000);
         gasSeries.setColor(Color.RED);
         measurementsGraph.getGridLabelRenderer().setVerticalLabelsColor(Color.RED);
         measurementsGraph.addSeries(gasSeries);
@@ -247,9 +267,9 @@ public class GetResponse extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             try {
-                InputMethodManager mImm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                mImm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
-                mImm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+                InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+                inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
             } catch (Exception e) {
                 Log.e(TAG, "setUserVisibleHint: ", e);
             }

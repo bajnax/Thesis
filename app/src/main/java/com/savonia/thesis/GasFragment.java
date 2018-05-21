@@ -112,7 +112,7 @@ public class GasFragment extends Fragment {
         // set date label formatter
         gasGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
         gasGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
-        gasGraph.getGridLabelRenderer().setHorizontalLabelsAngle(45);
+        gasGraph.getGridLabelRenderer().setHorizontalLabelsAngle(30);
         gasGraph.getGridLabelRenderer().setHighlightZeroLines(true);
 
         Calendar calendar = Calendar.getInstance();

@@ -116,7 +116,7 @@ public class TemperatureFragment extends Fragment {
         // set date label formatter
         temperatureGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
         temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
-        temperatureGraph.getGridLabelRenderer().setHorizontalLabelsAngle(45);
+        temperatureGraph.getGridLabelRenderer().setHorizontalLabelsAngle(30);
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();

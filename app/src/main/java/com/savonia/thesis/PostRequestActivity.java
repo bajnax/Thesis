@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.savonia.thesis.db.entity.Gas;
@@ -24,8 +23,6 @@ import com.savonia.thesis.webclient.measuremetsmodels.MeasurementsModel;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -54,7 +51,7 @@ public class PostRequestActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_post_response);
+        setContentView(R.layout.activity_post_request);
         inputLayoutMeasurementName = (TextInputLayout) findViewById(R.id.input_layout_measurementName);
         measurementNameEdTxt = (TextInputEditText) findViewById(R.id.measurementName);
         inputLayoutMeasurementTag = (TextInputLayout) findViewById(R.id.input_layout_measurementTag);

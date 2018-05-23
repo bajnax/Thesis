@@ -112,7 +112,7 @@ public class TemperatureFragment extends Fragment {
         temperatureGraph.getViewport().setMinY(-15);
         temperatureGraph.getViewport().setMaxY(50);
 
-        //TODO: make the date labels on the X axis to be shown properly
+
         // set date label formatter
         temperatureGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
         temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
@@ -120,7 +120,7 @@ public class TemperatureFragment extends Fragment {
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
-        long t2 = calendar.getTimeInMillis() + 15000;
+        long t2 = calendar.getTimeInMillis() + 16000;
 
         temperatureGraph.getViewport().setXAxisBoundsManual(true);
         temperatureGraph.getViewport().setMinX((double)t1);
@@ -158,7 +158,7 @@ public class TemperatureFragment extends Fragment {
                         Log.i(TAG, "RESETTING TEMPERATURE GRAPH AFTER CONFIGURATION CHANGES");
 
                         temperatureGraph.getViewport().setMinX((double)temperatures.get(0).getTimestamp());
-                        temperatureGraph.getViewport().setMaxX(temperatureGraph.getViewport().getMinX(false) + 15000);
+                        temperatureGraph.getViewport().setMaxX(temperatureGraph.getViewport().getMinX(false) + 16000);
 
                         displayTemperatures(temperatures);
 
@@ -167,10 +167,10 @@ public class TemperatureFragment extends Fragment {
                         if (temperatures.size() == 1) {
                             // set manual x bounds to have nice steps
                             temperatureGraph.getViewport().setMinX((double) temperatures.get(0).getTimestamp());
-                            temperatureGraph.getViewport().setMaxX(temperatureGraph.getViewport().getMinX(false) + 15000);
+                            temperatureGraph.getViewport().setMaxX(temperatureGraph.getViewport().getMinX(false) + 16000);
 
                             Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double) temperatures.get(0).getTimestamp()));
-                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format((temperatureGraph.getViewport().getMinX(false) + 15000)));
+                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format((temperatureGraph.getViewport().getMinX(false) + 16000)));
                         }
 
                         // appending each data point to the graph upon addition to the database
@@ -221,7 +221,6 @@ public class TemperatureFragment extends Fragment {
 
     private void displayTemperature(Temperature temperature) {
 
-        // changes made when the app was paused are shown only after the configChanges
         mTimer1 = new Runnable()
         {
             @Override
@@ -242,7 +241,6 @@ public class TemperatureFragment extends Fragment {
     }
 
 
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(String tag, Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(tag, uri);

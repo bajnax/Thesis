@@ -363,7 +363,9 @@ public class BluetoothLowEnergyService extends Service {
 
                     mBluetoothDeviceAddress = address;
                     mConnectionState = STATE_CONNECTING;
-                    mBluetoothGatt.connect();
+                    if (mBluetoothGatt != null) {
+                        mBluetoothGatt.connect();
+                    }
                 } catch(Exception ex) {
                     ex.printStackTrace();
                 }
@@ -520,7 +522,9 @@ public class BluetoothLowEnergyService extends Service {
                                     BluetoothGattDescriptor descriptor =
                                             characteristic.getDescriptor(UUID.fromString(GattAttributesSample.CLIENT_CHARACTERISTIC_CONFIG));
                                     descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                                    mBluetoothGatt.writeDescriptor(descriptor);
+                                    if (mBluetoothGatt != null) {
+                                        mBluetoothGatt.writeDescriptor(descriptor);
+                                    }
 
                                     sensorsDataCharacteristic = null;
                                 } catch(Exception exc) {
@@ -551,7 +555,8 @@ public class BluetoothLowEnergyService extends Service {
         mHandler.postDelayed(reconnect = new Runnable() {
             @Override
             public void run() {
-                connect(mBluetoothDeviceAddress, autoConnect);
+                if(mBluetoothDeviceAddress != null && !mBluetoothDeviceAddress.isEmpty())
+                    connect(mBluetoothDeviceAddress, autoConnect);
             }
         }, delay);
     }

@@ -108,7 +108,6 @@ public class GasFragment extends Fragment {
         gasGraph.getViewport().setMinY(0);
         gasGraph.getViewport().setMaxY(2000);
 
-        //TODO: make the date labels on the X axis to be shown properly
         // set date label formatter
         gasGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity(), mDateFormatter));
         gasGraph.getGridLabelRenderer().setNumHorizontalLabels(4); // only 4 because of the space
@@ -117,7 +116,7 @@ public class GasFragment extends Fragment {
 
         Calendar calendar = Calendar.getInstance();
         long t1 = calendar.getTimeInMillis();
-        long t2 = calendar.getTimeInMillis() + 15000;
+        long t2 = calendar.getTimeInMillis() + 16000;
 
         gasGraph.getViewport().setXAxisBoundsManual(true);
         gasGraph.getViewport().setMinX((double)t1);
@@ -155,7 +154,7 @@ public class GasFragment extends Fragment {
 
                         // set manual x bounds to have nice steps
                         gasGraph.getViewport().setMinX((double) gases.get(0).getTimestamp());
-                        gasGraph.getViewport().setMaxX(gasGraph.getViewport().getMinX(false) + 15000);
+                        gasGraph.getViewport().setMaxX(gasGraph.getViewport().getMinX(false) + 16000);
 
                         displayGases(gases);
 
@@ -165,10 +164,10 @@ public class GasFragment extends Fragment {
                         if (gases.size() == 1) {
                             // set manual x bounds to have nice steps
                             gasGraph.getViewport().setMinX((double) gases.get(0).getTimestamp());
-                            gasGraph.getViewport().setMaxX(gasGraph.getViewport().getMinX(false) + 15000);
+                            gasGraph.getViewport().setMaxX(gasGraph.getViewport().getMinX(false) + 16000);
 
                             Log.d(TAG, "Initial timestamp, MinLabelX: " + mDateFormatter.format((double) gases.get(0).getTimestamp()));
-                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format((gasGraph.getViewport().getMinX(false) + 15000)));
+                            Log.d(TAG, "Final timestamp, MaxLabelX: " + mDateFormatter.format((gasGraph.getViewport().getMinX(false) + 16000)));
                         }
 
                         Log.i(TAG, "Gas ID: " + gases.get(gases.size() - 1).getId() + " and timestamp: " + gases.get(gases.size() - 1).getTimestamp());
@@ -228,7 +227,6 @@ public class GasFragment extends Fragment {
     }
 
 
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(String tag, Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(tag, uri);

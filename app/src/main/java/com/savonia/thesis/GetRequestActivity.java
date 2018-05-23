@@ -79,7 +79,7 @@ public class GetRequestActivity extends AppCompatActivity {
                     viewPager.setCurrentItem(1);
                 } else {
                     Toast.makeText(GetRequestActivity.this, "Error occurred while loading the data. " +
-                                    "Check your internet connection, search parameters or contact Mikko Paakkonen!",
+                                    "Check your internet connection, search parameters or contact the administrator of the SaMi!",
                             Toast.LENGTH_LONG).show();
                 }
             }

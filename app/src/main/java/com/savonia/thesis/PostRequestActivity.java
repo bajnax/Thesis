@@ -138,12 +138,11 @@ public class PostRequestActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                     // closing activity
                     PostRequestActivity.this.finish();
-                    // TODO: clear the database here
                     saMiViewModel.clearDatabase();
 
                 } else {
                     Toast.makeText(PostRequestActivity.this, "Error occurred while sending the data. " +
-                                    "Check your internet connection, availability of data in the DB or contact Mikko Paakkonen!",
+                                    "Check your internet connection, availability of data in the DB or contact the administrator of the SaMi!",
                             Toast.LENGTH_LONG).show();
                 }
             }

@@ -21,16 +21,6 @@ public class WebClient {
     public static SaMiClient getWebClient() {
         if(saMiClient == null) {
             OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-                    /*.addInterceptor(new Interceptor() {
-                        @Override
-                        public okhttp3.Response intercept(Chain chain) throws IOException {
-                            Request request = chain.request();
-                            okhttp3.Response response = chain.proceed(request);
-                            Log.d(TAG, "Server response: " + response.message());
-
-                            return response;
-                        }
-                    });*/
             retrofit = new Retrofit.Builder()
                     .baseUrl(saMiUrl)
                     .addConverterFactory(GsonConverterFactory.create())

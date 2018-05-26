@@ -247,7 +247,7 @@ public class PostRequestActivity extends AppCompatActivity {
 
         // sending generated measurement to the SaMi cloud via POST request
         Log.d(TAG, "SENDING GENERATED TEMPERATURE AND/OR GAS MEASUREMENT VIA POST REQUEST");
-        saMiViewModel.makePostRequest("savoniatest", initialMeasurements);
+        saMiViewModel.makePostRequest(getResources().getString(R.string.key_password), initialMeasurements);
     }
 
 

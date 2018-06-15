@@ -181,6 +181,7 @@ public class GasFragment extends Fragment {
         return rootView;
     }
 
+    // resetting the whole graph with all received values
     private void displayGases(List<Gas> gases) {
 
         mTimer2 = new Runnable()
@@ -206,6 +207,7 @@ public class GasFragment extends Fragment {
     }
 
 
+    // appending a data point to the graph
     private void displayGas(Gas gas) {
 
         mTimer1 = new Runnable()

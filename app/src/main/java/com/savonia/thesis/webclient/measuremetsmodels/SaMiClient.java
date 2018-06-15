@@ -18,8 +18,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface SaMiClient {
-    //modify key
-    String key =  "SK50D-2018A47DB5C3EE70205-23";// old one is "savoniatest";
 
     @Headers({
             "User-Agent: Fiddler",

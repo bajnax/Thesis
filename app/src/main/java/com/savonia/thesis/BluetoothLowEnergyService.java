@@ -188,7 +188,7 @@ public class BluetoothLowEnergyService extends Service {
         sendBroadcast(intent);
     }
 
-    // broadcasting characteristic's data to LeConnectedDeviceActivity
+    //  checks what kind of measurements has been received and saves its value in the database accordingly
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
 
@@ -202,7 +202,7 @@ public class BluetoothLowEnergyService extends Service {
             intent.putExtra(EXTRA_DATA, value);
 
             // retrieving the double value from the temperature notification
-            if(value.charAt(0) == 't' && !value.contains("g")) {
+            if(value.charAt(0) == 't' && !value.contains("g")) {    // MODIFY for your sensor's character
                 try {
                     StringBuilder sb = new StringBuilder(value);
                     value = sb.substring(1);
@@ -216,7 +216,7 @@ public class BluetoothLowEnergyService extends Service {
                 }catch (Exception e){
                     e.printStackTrace();
                 }
-            } else if(value.charAt(0) == 'g' && !value.contains("t")) {
+            } else if(value.charAt(0) == 'g' && !value.contains("t")) {     // MODIFY for your sensor's character
                 // retrieving the double value from the gas notification
                 try {
                     StringBuilder sb = new StringBuilder(value);

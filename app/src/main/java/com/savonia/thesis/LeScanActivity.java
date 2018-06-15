@@ -421,10 +421,11 @@ public class LeScanActivity extends AppCompatActivity {
                 viewHolder.deviceName.setText(R.string.unknown_device);
             viewHolder.deviceAddress.setText(device.getAddress());
 
+
             viewHolder.connect_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(device.getAddress().equals(GattAttributesSample.DEVICE_ADDRESS)) {
+                    if(device.getAddress().equals(GattAttributesSample.DEVICE_ADDRESS)) { // MODIFY, because it allows to connect only to my BLE shield with its specific address
                         Intent connectToDevice = new Intent();
                         connectToDevice.setClass(LeScanActivity.this, LeConnectedDeviceActivity.class);
                         connectToDevice.putExtra("deviceAddress", GattAttributesSample.DEVICE_ADDRESS);
